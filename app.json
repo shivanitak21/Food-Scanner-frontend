@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "FoodLens",
+    "slug": "foodlens",
+    "scheme": "foodlens",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.foodlens.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "FoodLens uses the camera to scan food barcodes and photograph ingredient labels.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
+    },
+    "android": {
+      "package": "com.foodlens.app",
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#1B5E45",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FoodLens uses the camera to scan food barcodes and photograph ingredient labels.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FoodLens uses your photos so you can upload a report page.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-secure-store",
+      "expo-image",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F3F0E8",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "dark": {
+            "backgroundColor": "#101513",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}

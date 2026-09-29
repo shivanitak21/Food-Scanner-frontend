@@ -1,0 +1,179 @@
+export type AnalysisStatus = 'suitable' | 'review' | 'avoid';
+
+export type ProfileRole = 'self' | 'adult' | 'child' | 'baby' | 'other';
+
+export type AgeGroup = 'baby' | 'child' | 'teen' | 'adult' | 'older_adult';
+
+export type DietPreference = 'none' | 'vegetarian' | 'vegan';
+
+export type FindingCategory = 'allergen' | 'nutrition' | 'ingredient' | 'preference' | 'other';
+
+export type FindingSeverity = 'info' | 'caution' | 'avoid';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export type HealthInterpretation = 'elevated' | 'low' | 'normal' | 'borderline';
+
+export interface HealthBiomarker {
+  name: string;
+  value: number | null;
+  unit: string | null;
+  interpretation: HealthInterpretation | null;
+  date: string | null;
+  confirmedByUser: boolean;
+}
+
+export interface HealthRecommendation {
+  recommendation: string;
+  source: string | null;
+  confirmedByUser: boolean;
+}
+
+export interface HealthContext {
+  enabled: boolean;
+  paused: boolean;
+  biomarkers: HealthBiomarker[];
+  dietaryRecommendations: HealthRecommendation[];
+  reportCount: number;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  role: ProfileRole;
+  ageGroup: AgeGroup | null;
+  age: number | null;
+  diet: DietPreference;
+  dietaryPreferences: string[];
+  allergies: string[];
+  limits: string[];
+  notes: string | null;
+  isPrimary: boolean;
+  healthContext?: HealthContext;
+}
+
+export interface ProfileInput {
+  name: string;
+  role: ProfileRole;
+  ageGroup: AgeGroup | null;
+  age: number | null;
+  diet: DietPreference;
+  dietaryPreferences: string[];
+  allergies: string[];
+  limits: string[];
+  notes: string | null;
+  isPrimary: boolean;
+}
+
+export interface Finding {
+  id: string;
+  title: string;
+  explanation: string;
+  category: FindingCategory;
+  severity?: FindingSeverity;
+  ingredientName?: string;
+  nutrient?: string;
+  value?: string;
+  unit?: string;
+  shortReason?: string;
+  insightType?: string;
+  evidence?: string;
+}
+
+export interface FamilyMemberSummary {
+  profileId: string;
+  profileName: string;
+  status: AnalysisStatus;
+  statusLabel: string;
+  headline: string;
+}
+
+export interface FamilyScan {
+  id: string;
+  createdAt: string;
+  scanType: 'barcode' | 'label';
+  disclaimer: string;
+  product: Product;
+  familySummary: FamilyMemberSummary[];
+  profiles: AnalysisResult[];
+}
+
+export interface IngredientItem {
+  id: string;
+  name: string;
+  flagged: boolean;
+  reason?: string;
+  details?: string;
+}
+
+export interface NutritionItem {
+  id: string;
+  name: string;
+  amount: string;
+  unit?: string;
+  dailyValuePercent?: number;
+  note?: string;
+}
+
+export interface EvidenceItem {
+  id: string;
+  title: string;
+  detail?: string;
+  source?: string;
+  url?: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  brand?: string;
+  barcode?: string;
+  imageUrl?: string;
+  ingredientsText?: string;
+  ingredients: IngredientItem[];
+  nutrition: NutritionItem[];
+}
+
+export interface AnalysisResult {
+  id: string;
+  createdAt: string;
+  scanType: 'barcode' | 'label';
+  profileId?: string;
+  profileName?: string;
+  status: AnalysisStatus;
+  statusLabel: string;
+  summary: string;
+  disclaimer: string;
+  product: Product;
+  concerns: Finding[];
+  allergens: Finding[];
+  nutritionConcerns: Finding[];
+  relevantIngredients: Finding[];
+  ingredients: IngredientItem[];
+  nutrition: NutritionItem[];
+  evidence: EvidenceItem[];
+  statusRecognized: boolean;
+}
+
+export interface ScanSummary {
+  id: string;
+  createdAt: string;
+  scanType: 'barcode' | 'label';
+  productName: string;
+  productBrand?: string;
+  imageUrl?: string;
+  profileCount: number;
+  reviewCount: number;
+  okayCount: number;
+  importantCount: number;
+  family: FamilyScan;
+}
+
+export interface AuthSession {
+  token: string;
+  user: User;
+}
