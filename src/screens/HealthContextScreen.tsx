@@ -1,4 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useQueryClient } from '@tanstack/react-query';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
@@ -24,6 +25,7 @@ const INTERPRETATIONS: HealthInterpretation[] = ['elevated', 'borderline', 'norm
 
 export function HealthContextScreen({ navigation, route }: Props) {
   const { colors } = useTheme();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -100,6 +102,7 @@ export function HealthContextScreen({ navigation, route }: Props) {
         reportCount: 1,
       });
       await profiles.refetch();
+      await queryClient.invalidateQueries({ queryKey: ['scans', 'history'] });
       setStep('saved');
     } catch (caught) {
       setError(getErrorMessage(caught));
@@ -113,6 +116,7 @@ export function HealthContextScreen({ navigation, route }: Props) {
     try {
       await clearHealthContext(route.params.profileId);
       await profiles.refetch();
+      await queryClient.invalidateQueries({ queryKey: ['scans', 'history'] });
       setBiomarkers([]);
       setNotes([]);
       setPaused(false);
@@ -243,7 +247,7 @@ export function HealthContextScreen({ navigation, route }: Props) {
           reportCount: saved?.reportCount ?? 1,
         }).then(() => {
           setPaused((value) => !value);
-          return profiles.refetch();
+          return Promise.all([profiles.refetch(), queryClient.invalidateQueries({ queryKey: ['scans', 'history'] })]);
         })} />
         <Button label="Replace" variant="secondary" onPress={() => setStep('intro')} />
         <Button label="Delete" variant="danger" onPress={() => void remove()} loading={busy} />

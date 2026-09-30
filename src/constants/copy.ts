@@ -4,9 +4,9 @@ export const DISCLAIMER =
   'This result explains information returned for the selected profile. Check the package label, and ask a qualified professional when a decision affects someone’s health.';
 
 export const STATUS_FALLBACK_LABEL: Record<AnalysisStatus, string> = {
-  suitable: 'Looks okay',
-  review: 'Review',
-  avoid: 'Important',
+  suitable: 'Can eat',
+  review: 'Check first',
+  avoid: "Don't eat",
 };
 
 export const STATUS_FALLBACK_SUMMARY: Record<AnalysisStatus, string> = {

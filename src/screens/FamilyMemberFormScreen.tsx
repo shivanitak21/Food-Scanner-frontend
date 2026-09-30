@@ -16,12 +16,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'FamilyMemberForm'>;
 const MEMBER_ROLES: ProfileRole[] = ['adult', 'child', 'baby', 'other'];
 
 function reportDetail(profile: Profile | null): string {
-  if (!profile) return 'Optional. Enter a name, then photograph or upload one page.';
+  if (!profile) return 'Optional. A confirmed report is included in this person’s product review.';
   const context = profile.healthContext;
   const count = (context?.biomarkers.length ?? 0) + (context?.dietaryRecommendations.length ?? 0);
   if (context?.enabled && context.paused) return 'Paused. Tap to review or replace the page.';
   if (context?.enabled && count > 0) return `${count} confirmed ${count === 1 ? 'item' : 'items'}`;
-  return 'Optional. Photograph or upload one page. You confirm the values first.';
+  return 'Optional. Confirm a page and it is included in this person’s product review.';
 }
 
 export function FamilyMemberFormScreen({ navigation, route }: Props) {

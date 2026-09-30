@@ -8,14 +8,12 @@ import { FamilyReview } from '@/components/design/FamilyReview';
 import { IngredientList } from '@/components/design/IngredientList';
 import { NutritionBlock } from '@/components/design/NutritionBlock';
 import { ProductVisual } from '@/components/design/ProductVisual';
-import { ProfileSelector } from '@/components/design/ProfileSelector';
-import { StatusMark } from '@/components/design/StatusMark';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { EvidenceItem, Finding } from '@/types/models';
 import type { RootStackParamList } from '@/types/navigation';
-import { collectFindings, insightCopy, nutrientRatio } from '@/utils/presentation';
+import { collectFindings, insightCopy } from '@/utils/presentation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AnalysisResult'>;
 
@@ -27,9 +25,13 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
   const selected =
     scan.profiles.find((profile) => profile.profileId === profileId) ?? scan.profiles[0] ?? null;
   const member = scan.familySummary.find((item) => item.profileId === profileId) ?? scan.familySummary[0];
-  const findings = useMemo(() => (selected ? collectFindings(selected).filter((item) => item.severity !== 'info') : []), [selected]);
-  const lead = findings[0];
-  const leadCopy = lead ? insightCopy(lead) : null;
+  const findings = useMemo(
+    () =>
+      selected
+        ? collectFindings(selected).filter((item) => item.severity !== 'info' || item.insightType === 'HEALTH_CONTEXT')
+        : [],
+    [selected],
+  );
   const evidence = selected?.evidence.filter((item) => item.title !== 'Limit of this screen').slice(0, 2) ?? [];
   const limitation = selected?.evidence.find((item) => /limit/i.test(item.title));
 
@@ -41,76 +43,39 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
       <ProductVisual name={scan.product.name} brand={scan.product.brand} imageUrl={scan.product.imageUrl} />
 
       <FamilyReview members={scan.familySummary} selectedId={profileId} onSelect={setProfileId} />
-      {findings.length > 0 ? (
-        <View style={styles.personal}>
-          <AppText variant="label" color={colors.textTertiary}>
-            What should I look at?
-          </AppText>
-          {findings.slice(0, 3).map((finding, index) => {
-            const copy = insightCopy(finding);
-            return (
-              <Pressable key={finding.id} accessibilityRole="button" onPress={() => setSheet(finding)} style={styles.more}>
-                <AppText variant="caption" color={colors.textTertiary}>
-                  {String(index + 1).padStart(2, '0')}
-                </AppText>
-                <AppText variant="headline">{copy.title}</AppText>
-                {copy.measure ? (
-                  <AppText variant="body" color={colors.textSecondary}>
-                    {copy.measure}
-                  </AppText>
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
 
       {selected && member ? (
-        <View style={styles.personal}>
-          <ProfileSelector members={scan.familySummary} selectedId={profileId} onSelect={setProfileId} />
-          <AppText variant="display" style={styles.name}>
+        <View style={[styles.verdict, { backgroundColor: colors[verdictTone(selected.status).soft], borderRadius: 22 }]}>
+          <AppText variant="label" color={colors.textTertiary}>
             {member.profileName}
           </AppText>
-          <StatusMark status={selected.status} />
-          {lead && leadCopy ? (
-            <View style={styles.insight}>
-              <AppText variant="headline">{leadCopy.title}</AppText>
-              {leadCopy.measure ? <AppText variant="numeric">{leadCopy.measure}</AppText> : null}
-              <MeasureBar
-                ratio={
-                  lead.value
-                    ? nutrientRatio(leadCopy.title, Number(lead.value))
-                    : selected.status === 'avoid'
-                      ? 0.9
-                      : 0.62
-                }
-                status={selected.status}
-              />
-              <AppText variant="body" color={colors.textSecondary}>
-                {leadCopy.reason}
-              </AppText>
-              <Pressable accessibilityRole="button" accessibilityLabel="Why this matters" onPress={() => setSheet(lead)} style={styles.details}>
-                <AppText variant="bodyMedium" color={colors.primary}>
-                  Why this matters
-                </AppText>
-              </Pressable>
+          <AppText variant="display" style={{ color: colors[verdictTone(selected.status).ink] }}>
+            {member.statusLabel}
+          </AppText>
+          {findings.length > 0 ? (
+            <View style={styles.chips}>
+              {findings.slice(0, 4).map((finding) => (
+                <Pressable
+                  key={finding.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={insightCopy(finding).title}
+                  onPress={() => setSheet(finding)}
+                  style={[styles.chip, { backgroundColor: colors.surface, borderRadius: 999 }]}
+                >
+                  <View style={[styles.dot, { backgroundColor: colors[verdictTone(selected.status).ink] }]} />
+                  <AppText variant="caption">{insightCopy(finding).title}</AppText>
+                </Pressable>
+              ))}
             </View>
-          ) : (
-            <AppText variant="body" color={colors.textSecondary}>
-              No configured concern in the available data.
-            </AppText>
-          )}
-          {findings.slice(1, 3).map((finding) => {
-            const copy = insightCopy(finding);
-            return (
-              <Pressable key={finding.id} accessibilityRole="button" onPress={() => setSheet(finding)} style={styles.more}>
-                <AppText variant="bodyMedium">{copy.title}</AppText>
-                <AppText variant="caption" color={colors.textSecondary}>
-                  {copy.reason}
-                </AppText>
-              </Pressable>
-            );
-          })}
+          ) : null}
+          {selected.summary ? (
+            <View style={styles.recommend}>
+              <AppText variant="label" color={colors.textTertiary}>
+                Recommendation
+              </AppText>
+              <AppText variant="bodyMedium">{selected.summary}</AppText>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -131,14 +96,13 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
   );
 }
 
-function MeasureBar({ ratio, status }: { ratio: number; status: 'suitable' | 'review' | 'avoid' }) {
-  const { colors } = useTheme();
-  const width = `${Math.round(Math.max(0.08, Math.min(1, ratio)) * 100)}%` as `${number}%`;
-  return (
-    <View style={[styles.track, { backgroundColor: colors.cream }]}>
-      <View style={[styles.fill, { width, backgroundColor: status === 'avoid' ? colors.avoid : status === 'review' ? colors.review : colors.primary }]} />
-    </View>
-  );
+function verdictTone(status: 'suitable' | 'review' | 'avoid'): {
+  ink: 'suitable' | 'review' | 'avoid';
+  soft: 'suitableSoft' | 'reviewSoft' | 'avoidSoft';
+} {
+  if (status === 'avoid') return { ink: 'avoid', soft: 'avoidSoft' };
+  if (status === 'review') return { ink: 'review', soft: 'reviewSoft' };
+  return { ink: 'suitable', soft: 'suitableSoft' };
 }
 
 function FindingDetail({
@@ -159,7 +123,7 @@ function FindingDetail({
     <View style={styles.sheet}>
       {health ? (
         <AppText variant="body" color={colors.textSecondary}>
-          Based on the health information you added to this profile. This is not a diagnosis, and it is not medical advice.
+          {finding.evidence || copy.reason}
         </AppText>
       ) : null}
       {copy.measure ? (
@@ -197,12 +161,10 @@ function FindingDetail({
 
 const styles = StyleSheet.create({
   back: { width: 44, height: 44, justifyContent: 'center' },
-  personal: { gap: 10, marginTop: 12 },
-  name: { fontSize: 34, lineHeight: 40 },
-  insight: { gap: 8, paddingTop: 8 },
-  details: { minHeight: 44, justifyContent: 'center' },
-  more: { gap: 2, minHeight: 52, justifyContent: 'center' },
-  track: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  fill: { height: 4, borderRadius: 2 },
+  verdict: { gap: 10, marginTop: 16, padding: 18 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  recommend: { gap: 4 },
   sheet: { gap: 8 },
 });

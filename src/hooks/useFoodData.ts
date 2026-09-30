@@ -55,6 +55,7 @@ export function useProfileMutations() {
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ['profiles'] });
+    await queryClient.invalidateQueries({ queryKey: ['scans', 'history'] });
   };
 
   const create = useMutation({

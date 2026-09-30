@@ -103,8 +103,6 @@ export function ProfileForm({
     control,
     handleSubmit,
     setError,
-    setValue,
-    getValues,
     reset,
     formState: { errors },
   } = useForm<FormValues>({
@@ -139,7 +137,7 @@ export function ProfileForm({
       dietaryPreferences: values.dietaryPreferences,
       allergies: values.allergies,
       limits: values.limits,
-      notes: values.notes.trim() ? values.notes.trim() : null,
+      notes: initial?.notes ?? null,
       isPrimary: values.role === 'self',
     };
 
@@ -203,7 +201,7 @@ export function ProfileForm({
         </Pressable>
       ) : null}
 
-      <FieldLabel label="Life stage" />
+      <FieldLabel label="Who they are" hint="This names the person. Age group is what changes the product review." />
       <Controller
         control={control}
         name="role"
@@ -222,7 +220,7 @@ export function ProfileForm({
         )}
       />
 
-      <FieldLabel label="Age group" />
+      <FieldLabel label="Age group" hint="Baby and child change the review, including honey, added sugar, salt, and caffeine. Adult, teen, and older adult do not add an age finding." />
       <Controller
         control={control}
         name="ageGroup"
@@ -256,8 +254,11 @@ export function ProfileForm({
           />
         )}
       />
+      <AppText variant="caption" color={colors.textSecondary}>
+        Under 1 and under 2 change the review when the age group is not already baby or child.
+      </AppText>
 
-      <SectionTitle title="Diet" />
+      <SectionTitle title="Diet" hint="Vegetarian and vegan change the result when those ingredients are listed." />
       <Controller
         control={control}
         name="diet"
@@ -279,43 +280,25 @@ export function ProfileForm({
       <MultiField
         controlName="allergies"
         label="Allergies"
+        hint="A listed allergen marks the product Important for this person."
         options={ALLERGY_OPTIONS}
         tone="avoid"
         control={control}
-        getValues={getValues}
-        setValue={setValue}
       />
       <MultiField
         controlName="limits"
         label="Things to limit"
+        hint="Sugar, sodium, saturated fat, caffeine, and sweeteners change the review when they are on the product."
         options={LIMIT_OPTIONS}
         tone="review"
         control={control}
-        getValues={getValues}
-        setValue={setValue}
       />
       <MultiField
         controlName="dietaryPreferences"
         label="Other preferences"
+        hint="Gluten-free, nut-free, halal, kosher, and organic change the review. Low sugar and low sodium count as limits."
         options={PREFERENCE_OPTIONS}
         control={control}
-        getValues={getValues}
-        setValue={setValue}
-      />
-
-      <Controller
-        control={control}
-        name="notes"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextField
-            label="Notes, optional"
-            value={value}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            multiline
-            error={errors.notes?.message}
-          />
-        )}
       />
 
       <Button label={submitLabel} onPress={() => void submit('save')()} loading={submitting} />
@@ -326,75 +309,74 @@ export function ProfileForm({
   );
 }
 
-function SectionTitle({ title }: { title: string }) {
-  return <AppText variant="headline">{title}</AppText>;
-}
-
-function FieldLabel({ label }: { label: string }) {
+function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   const { colors } = useTheme();
   return (
-    <AppText variant="label" color={colors.textSecondary}>
-      {label}
-    </AppText>
+    <View style={styles.block}>
+      <AppText variant="headline">{title}</AppText>
+      {hint ? (
+        <AppText variant="caption" color={colors.textSecondary}>
+          {hint}
+        </AppText>
+      ) : null}
+    </View>
+  );
+}
+
+function FieldLabel({ label, hint }: { label: string; hint?: string }) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.block}>
+      <AppText variant="label" color={colors.textSecondary}>
+        {label}
+      </AppText>
+      {hint ? (
+        <AppText variant="caption" color={colors.textSecondary}>
+          {hint}
+        </AppText>
+      ) : null}
+    </View>
   );
 }
 
 function MultiField({
   controlName,
   label,
+  hint,
   options,
   tone = 'default',
   control,
-  getValues,
-  setValue,
 }: {
   controlName: 'allergies' | 'limits' | 'dietaryPreferences';
   label: string;
+  hint?: string;
   options: string[];
   tone?: 'default' | 'avoid' | 'review';
   control: ReturnType<typeof useForm<FormValues>>['control'];
-  getValues: ReturnType<typeof useForm<FormValues>>['getValues'];
-  setValue: ReturnType<typeof useForm<FormValues>>['setValue'];
 }) {
-  const [draft, setDraft] = useState('');
-  const commit = () => {
-    const next = draft.trim();
-    if (!next) return;
-    const current = getValues(controlName);
-    if (!current.some((item) => item.toLowerCase() === next.toLowerCase())) {
-      setValue(controlName, [...current, next], { shouldDirty: true });
-    }
-    setDraft('');
-  };
-
   return (
     <View style={styles.block}>
-      <SectionTitle title={label} />
+      <SectionTitle title={label} hint={hint} />
       <Controller
         control={control}
         name={controlName}
-        render={({ field: { value, onChange } }) => {
-          const choices = unique([...options, ...value]);
-          return (
-            <View style={styles.wrap}>
-              {choices.map((option) => (
-                <Chip
-                  key={option}
-                  label={option}
-                  tone={tone}
-                  selected={value.some((item) => item.toLowerCase() === option.toLowerCase())}
-                  onPress={() => {
-                    const exists = value.some((item) => item.toLowerCase() === option.toLowerCase());
-                    onChange(exists ? value.filter((item) => item.toLowerCase() !== option.toLowerCase()) : [...value, option]);
-                  }}
-                />
-              ))}
-            </View>
-          );
-        }}
+        render={({ field: { value, onChange } }) => (
+          <View style={styles.wrap}>
+            {unique([...options, ...value]).map((option) => (
+              <Chip
+                key={option}
+                label={option}
+                tone={tone}
+                selected={value.some((item) => item.toLowerCase() === option.toLowerCase())}
+                onPress={() => {
+                  const exists = value.some((item) => item.toLowerCase() === option.toLowerCase());
+                  onChange(exists ? value.filter((item) => item.toLowerCase() !== option.toLowerCase()) : [...value, option]);
+                }}
+              />
+            ))}
+          </View>
+        )}
       />
-      <TextField label="Add your own" value={draft} onChangeText={setDraft} onSubmitEditing={commit} returnKeyType="done" />
-      <Button label="Add" variant="secondary" fullWidth={false} onPress={commit} />
     </View>
   );
 }

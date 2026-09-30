@@ -1,9 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { StatusMark } from '@/components/design/StatusMark';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { FamilyMemberSummary } from '@/types/models';
+import type { AnalysisStatus, FamilyMemberSummary } from '@/types/models';
 
 type Props = {
   members: FamilyMemberSummary[];
@@ -12,56 +11,75 @@ type Props = {
 };
 
 export function FamilyReview({ members, selectedId, onSelect }: Props) {
-  const { colors } = useTheme();
+  const { colors, radius } = useTheme();
+  const held = members.filter((member) => member.status !== 'suitable').length;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.heading}>
         <AppText variant="label" color={colors.textTertiary}>
-          Family snapshot
+          Who can eat this
         </AppText>
         <AppText variant="caption" color={colors.textTertiary}>
-          {members.filter((member) => member.status !== 'suitable').length === 0
-            ? 'Looks okay'
-            : `${members.filter((member) => member.status !== 'suitable').length} need a closer look`}
+          {held === 0 ? 'Everyone can eat' : `${members.length - held} can eat`}
         </AppText>
       </View>
-      {members.map((member, index) => {
+      {members.map((member) => {
         const selected = member.profileId === selectedId;
-        const showConcern = member.headline && member.headline !== member.statusLabel && member.status !== 'suitable';
+        const tone = verdictTone(member.status);
         return (
-          <View key={member.profileId || member.profileName}>
-            {index > 0 ? <View style={[styles.rule, { backgroundColor: colors.border }]} /> : null}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${member.profileName}, ${member.statusLabel}${showConcern ? `, ${member.headline}` : ''}`}
-              accessibilityState={{ selected }}
-              onPress={() => onSelect(member.profileId)}
-              style={styles.row}
-            >
-              <View style={styles.copy}>
-                <AppText variant="headline" color={selected ? colors.text : colors.textSecondary}>
-                  {member.profileName}
+          <Pressable
+            key={member.profileId || member.profileName}
+            accessibilityRole="button"
+            accessibilityLabel={`${member.profileName}, ${member.statusLabel}`}
+            accessibilityState={{ selected }}
+            onPress={() => onSelect(member.profileId)}
+            style={[
+              styles.card,
+              {
+                backgroundColor: selected ? colors[tone.soft] : colors.surface,
+                borderColor: selected ? colors[tone.ink] : colors.border,
+                borderRadius: radius.md,
+              },
+            ]}
+          >
+            <View style={[styles.mark, { backgroundColor: colors[tone.ink] }]} />
+            <View style={styles.copy}>
+              <AppText variant="headline">{member.profileName}</AppText>
+              {member.status !== 'suitable' && member.headline ? (
+                <AppText variant="caption" color={colors.textSecondary} numberOfLines={1}>
+                  {member.headline}
                 </AppText>
-                {showConcern ? (
-                  <AppText variant="caption" color={colors.textSecondary}>
-                    {member.headline}
-                  </AppText>
-                ) : null}
-              </View>
-              <StatusMark status={member.status} label={member.statusLabel} />
-            </Pressable>
-          </View>
+              ) : null}
+            </View>
+            <AppText variant="bodyMedium" color={colors[tone.ink]}>
+              {member.statusLabel}
+            </AppText>
+          </Pressable>
         );
       })}
     </View>
   );
 }
 
+function verdictTone(status: AnalysisStatus): { ink: 'suitable' | 'review' | 'avoid'; soft: 'suitableSoft' | 'reviewSoft' | 'avoidSoft' } {
+  if (status === 'avoid') return { ink: 'avoid', soft: 'avoidSoft' };
+  if (status === 'review') return { ink: 'review', soft: 'reviewSoft' };
+  return { ink: 'suitable', soft: 'suitableSoft' };
+}
+
 const styles = StyleSheet.create({
-  wrap: { gap: 4, marginTop: 8 },
-  heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 },
-  row: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  wrap: { gap: 8, marginTop: 8 },
+  heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  card: {
+    minHeight: 72,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  mark: { width: 8, height: 36, borderRadius: 4 },
   copy: { flex: 1, gap: 2 },
-  rule: { height: StyleSheet.hairlineWidth },
 });

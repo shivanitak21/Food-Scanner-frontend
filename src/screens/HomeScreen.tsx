@@ -159,8 +159,8 @@ function RecentRow({ scan, onPress }: { scan: ScanSummary; onPress: () => void }
   const summary =
     scan.importantCount + scan.reviewCount > 0
       ? `${scan.importantCount + scan.reviewCount} review${scan.importantCount + scan.reviewCount === 1 ? '' : 's'}`
-      : 'Looks okay';
-  const quiet = scan.okayCount > 0 ? `${scan.okayCount} looks okay` : null;
+      : 'Can eat';
+  const quiet = scan.okayCount > 0 ? `${scan.okayCount} can eat` : null;
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={scan.productName} onPress={onPress} style={styles.recent}>
