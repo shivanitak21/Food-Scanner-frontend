@@ -12,14 +12,14 @@ import { useTheme } from '@/theme/ThemeProvider';
 
 const slides = [
   {
-    icon: 'barcode-outline' as const,
-    title: 'Scan the package',
-    message: 'One scan. The same product, reviewed for everyone in your family.',
+    icon: 'camera-outline' as const,
+    title: 'Scan a product',
+    message: 'Photograph the package. We ask for another photo only when something is still missing.',
   },
   {
-    icon: 'camera-outline' as const,
-    title: 'Or photograph the label',
-    message: 'No barcode? Photograph the ingredient list.',
+    icon: 'barcode-outline' as const,
+    title: 'Barcode is optional',
+    message: 'A barcode can look the product up faster. If it is missing, we read the package.',
   },
   {
     icon: 'people-outline' as const,

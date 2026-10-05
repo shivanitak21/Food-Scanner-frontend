@@ -65,18 +65,22 @@ export function ScanHistoryScreen({ navigation }: Props) {
 
 function HistoryRow({ item, onPress }: { item: ScanSummary; onPress: () => void }) {
   const { colors, radius } = useTheme();
-  const reviews = item.reviewCount + item.importantCount;
-  const line = [
-    reviews > 0 ? `${reviews} review${reviews === 1 ? '' : 's'}` : null,
-    item.okayCount > 0 ? `${item.okayCount} looks okay` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const needs = item.reviewCount + item.importantCount;
+  const line =
+    needs > 0
+      ? `${needs} need review`
+      : item.insufficientCount > 0 && item.okayCount === 0
+        ? 'Not enough information'
+        : 'Good fit for everyone';
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={item.productName} onPress={onPress} style={styles.row}>
       {item.imageUrl ? (
-        <Image source={{ uri: item.imageUrl }} style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]} />
+        <Image
+          source={{ uri: item.imageUrl }}
+          contentFit="cover"
+          style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]}
+        />
       ) : (
         <View style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]} />
       )}

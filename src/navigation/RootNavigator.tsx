@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthNavigator } from '@/navigation/AuthNavigator';
 import { MainTabs } from '@/navigation/MainTabs';
 import { AnalysisResultScreen } from '@/screens/AnalysisResultScreen';
+import { CompareScreen } from '@/screens/CompareScreen';
 import { BarcodeScannerScreen } from '@/screens/BarcodeScannerScreen';
 import { FamilyMemberFormScreen } from '@/screens/FamilyMemberFormScreen';
 import { HealthContextScreen } from '@/screens/HealthContextScreen';
@@ -65,6 +66,7 @@ export function RootNavigator() {
         <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="LabelCamera" component={LabelCameraScreen} options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="AnalysisResult" component={AnalysisResultScreen} options={{ headerShown: false, animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="Compare" component={CompareScreen} options={{ title: 'Compare' }} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ title: '' }} />
         <Stack.Screen
           name="IngredientDetails"

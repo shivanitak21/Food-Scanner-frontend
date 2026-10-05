@@ -1,10 +1,11 @@
-import { DISCLAIMER, STATUS_FALLBACK_LABEL, STATUS_FALLBACK_SUMMARY } from '@/constants/copy';
+import { DISCLAIMER, FIT_LABEL, STATUS_FALLBACK_LABEL, STATUS_FALLBACK_SUMMARY } from '@/constants/copy';
 import type {
   AgeGroup,
   AnalysisResult,
   AnalysisStatus,
   FamilyMemberSummary,
   FamilyScan,
+  FitStatus,
   AuthSession,
   DietPreference,
   EvidenceItem,
@@ -13,6 +14,7 @@ import type {
   FindingCategory,
   FindingSeverity,
   IngredientItem,
+  LifeStage,
   NutritionItem,
   Product,
   Profile,
@@ -20,6 +22,7 @@ import type {
   ScanSummary,
   User,
 } from '@/types/models';
+import { API_URL } from '@/constants/config';
 import { humanizeKey } from '@/utils/format';
 
 const ROLES: ProfileRole[] = ['self', 'adult', 'child', 'baby', 'other'];
@@ -117,6 +120,17 @@ function normalizeDiet(record: Record<string, unknown>): DietPreference {
     return 'vegetarian';
   }
   return 'none';
+}
+
+const LIFE_STAGES: LifeStage[] = ['me', 'adult', 'child', 'teen', 'baby', 'pregnancy', 'breastfeeding', 'senior', 'other'];
+const FITS: FitStatus[] = ['GOOD_FIT', 'REVIEW', 'DOES_NOT_FIT', 'INSUFFICIENT_INFORMATION'];
+
+export function normalizeFit(value: unknown, status: AnalysisStatus): FitStatus {
+  const text = String(value ?? '').toUpperCase();
+  if (FITS.includes(text as FitStatus)) return text as FitStatus;
+  if (status === 'avoid') return 'DOES_NOT_FIT';
+  if (status === 'review') return 'REVIEW';
+  return 'GOOD_FIT';
 }
 
 export function normalizeStatus(value: unknown): AnalysisStatus | null {
@@ -277,11 +291,18 @@ export function normalizeProduct(value: unknown, fallbackName?: string): Product
     name: pickString(record, ['name', 'title', 'productName', 'product_name']) ?? fallbackName ?? 'Scanned product',
     brand: pickString(record, ['brand', 'brandName', 'brand_name', 'manufacturer']),
     barcode: pickString(record, ['barcode', 'code', 'upc', 'ean']),
-    imageUrl: pickString(record, ['imageUrl', 'image_url', 'image', 'photoUrl', 'photo_url']),
+    imageUrl: resolveImageUrl(pickString(record, ['imageUrl', 'image_url', 'image', 'photoUrl', 'photo_url'])),
     ingredientsText,
     ingredients,
     nutrition: normalizeNutrition(nutritionSource),
   };
+}
+
+function resolveImageUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  if (value.startsWith('/') && API_URL) return `${API_URL}${value}`;
+  return value;
 }
 
 function normalizeScanType(value: unknown, fallback: 'barcode' | 'label'): 'barcode' | 'label' {
@@ -344,12 +365,14 @@ export function normalizeAnalysis(
 }
 
 function memberFromAnalysis(analysis: AnalysisResult): FamilyMemberSummary {
+  const fit = normalizeFit(undefined, analysis.status);
   return {
     profileId: analysis.profileId ?? '',
     profileName: analysis.profileName ?? 'Profile',
     status: analysis.status,
-    statusLabel: STATUS_FALLBACK_LABEL[analysis.status],
-    headline: analysis.summary || STATUS_FALLBACK_LABEL[analysis.status],
+    fit,
+    statusLabel: FIT_LABEL[fit],
+    headline: analysis.summary || FIT_LABEL[fit],
   };
 }
 
@@ -357,12 +380,14 @@ function normalizeMember(value: unknown, fallback?: AnalysisResult): FamilyMembe
   const record = asRecord(value);
   if (!record) return fallback ? memberFromAnalysis(fallback) : null;
   const status = normalizeStatus(pickString(record, ['status'])) ?? fallback?.status ?? 'review';
+  const fit = normalizeFit(pickString(record, ['fit']), status);
   return {
     profileId: pickString(record, ['profileId', 'profile_id']) ?? fallback?.profileId ?? '',
     profileName: pickString(record, ['profileName', 'profile_name', 'name']) ?? fallback?.profileName ?? 'Profile',
     status,
-    statusLabel: STATUS_FALLBACK_LABEL[status],
-    headline: pickString(record, ['headline', 'topConcern', 'top_concern']) ?? STATUS_FALLBACK_LABEL[status],
+    fit,
+    statusLabel: pickString(record, ['statusLabel', 'status_label']) ?? FIT_LABEL[fit],
+    headline: pickString(record, ['headline', 'topConcern', 'top_concern']) ?? FIT_LABEL[fit],
   };
 }
 
@@ -402,6 +427,7 @@ export function normalizeFamilyScan(value: unknown, hint?: { scanType?: 'barcode
     product: product.name ? product : (profiles[0]?.product ?? product),
     familySummary: summary.length > 0 ? summary : profiles.map(memberFromAnalysis),
     profiles,
+    missingInformation: stringList(record.missingInformation ?? record.missing_information),
   };
 }
 
@@ -414,6 +440,7 @@ function wrapSingleAnalysis(analysis: AnalysisResult): FamilyScan {
     product: analysis.product,
     familySummary: [memberFromAnalysis(analysis)],
     profiles: [analysis],
+    missingInformation: [],
   };
 }
 
@@ -436,9 +463,10 @@ export function normalizeHistory(value: unknown): ScanSummary[] {
       productBrand: family.product.brand,
       imageUrl: family.product.imageUrl,
       profileCount: family.familySummary.length,
-      reviewCount: family.familySummary.filter((member) => member.status === 'review').length,
-      okayCount: family.familySummary.filter((member) => member.status === 'suitable').length,
-      importantCount: family.familySummary.filter((member) => member.status === 'avoid').length,
+      reviewCount: family.familySummary.filter((member) => member.fit === 'REVIEW').length,
+      okayCount: family.familySummary.filter((member) => member.fit === 'GOOD_FIT').length,
+      importantCount: family.familySummary.filter((member) => member.fit === 'DOES_NOT_FIT').length,
+      insufficientCount: family.familySummary.filter((member) => member.fit === 'INSUFFICIENT_INFORMATION').length,
       family,
     };
   });
@@ -481,6 +509,8 @@ export function normalizeProfile(value: unknown, index = 0): Profile | null {
     dietaryPreferences: stringList(profile.dietaryPreferences ?? profile.dietary_preferences ?? profile.preferences),
     allergies: stringList(profile.allergies),
     limits: stringList(profile.limits ?? profile.limitIngredients ?? profile.limit_ingredients ?? profile.restrictions),
+    goals: stringList(profile.goals).slice(0, 3),
+    lifeStage: LIFE_STAGES.find((stage) => stage === pickString(profile, ['lifeStage', 'life_stage'])) ?? null,
     notes: pickString(profile, ['notes', 'note']) ?? null,
     isPrimary: pickBool(profile, ['isPrimary', 'is_primary']) ?? role === 'self',
     healthContext: normalizeHealth(profile.healthContext ?? profile.health_context),

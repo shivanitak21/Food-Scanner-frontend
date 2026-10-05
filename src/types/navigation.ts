@@ -20,6 +20,7 @@ export type RootStackParamList = {
   LabelCamera: { barcode?: string; productName?: string } | undefined;
   HealthContext: { profileId: string };
   AnalysisResult: { scan: FamilyScan };
+  Compare: { left: FamilyScan; right: FamilyScan };
   ProductDetails: { productId?: string; product?: Product };
   IngredientDetails: { ingredient: IngredientItem; productName?: string };
   UserProfile: undefined;

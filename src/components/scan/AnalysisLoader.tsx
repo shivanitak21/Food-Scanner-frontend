@@ -6,16 +6,16 @@ import { AppText } from '@/components/ui/AppText';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
 import { useTheme } from '@/theme/ThemeProvider';
 
-const steps = ['Reading ingredients', 'Checking nutrition', 'Reviewing family profiles'];
+const steps = ['Reading the package', 'Checking ingredients', 'Comparing nutrition', 'Preparing family insights'];
 
 export function AnalysisLoader({ subtitle }: { subtitle?: string }) {
   const { colors, radius } = useTheme();
   const reduceMotion = useReduceMotion();
-  const [active, setActive] = useState(reduceMotion ? 2 : 0);
+  const [active, setActive] = useState(reduceMotion ? steps.length - 1 : 0);
 
   useEffect(() => {
     if (reduceMotion) return;
-    const timers = [700, 1500].map((delay, index) => setTimeout(() => setActive(index + 1), delay));
+    const timers = [600, 1200, 1900].map((delay, index) => setTimeout(() => setActive(index + 1), delay));
     return () => timers.forEach(clearTimeout);
   }, [reduceMotion]);
 

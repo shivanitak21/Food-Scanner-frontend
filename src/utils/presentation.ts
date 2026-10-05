@@ -116,8 +116,8 @@ export function findingLine(finding: Finding): string {
 }
 
 export function scanInsight(scan: ScanSummary): string {
-  const concern = scan.family.familySummary.find((member) => member.status !== 'suitable');
-  return concern?.headline ?? 'Can eat';
+  const concern = scan.family.familySummary.find((member) => member.fit !== 'GOOD_FIT');
+  return concern?.headline ?? 'Good fit';
 }
 
 export function nutrientIcon(name: string): IconName {

@@ -182,18 +182,18 @@ export function BarcodeScannerScreen({ navigation }: Props) {
           {failure ? (
             <View style={[styles.failure, { backgroundColor: colors.background, borderRadius: radius.lg }]}>
               <AppText variant="headline" style={styles.captionDark}>
-                {failure === 'product' ? 'Barcode found' : failure === 'network' ? 'Barcode detected' : "Can't find the barcode yet"}
+                {failure === 'product' ? 'We found the barcode, but not this product.' : failure === 'network' ? 'Barcode detected' : "Can't find the barcode yet"}
               </AppText>
               <AppText variant="caption" color={colors.textSecondary} style={styles.captionDark}>
                 {failure === 'product'
-                  ? "We don't have this product yet."
+                  ? "Let's read the package instead."
                   : failure === 'network'
                     ? 'Product lookup is unavailable.'
                     : 'Move closer, keep the barcode flat, and add more light.'}
               </AppText>
               {failure === 'product' ? (
                 <>
-                  <Button label="Scan nutrition label" onPress={() => navigation.replace('LabelCamera', { barcode: foundCode ?? undefined })} />
+                  <Button label="Scan package" onPress={() => navigation.replace('LabelCamera', { barcode: foundCode ?? undefined })} />
                   <Button label="Try again" variant="secondary" onPress={retry} />
                 </>
               ) : (

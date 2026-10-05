@@ -1,6 +1,10 @@
 export type AnalysisStatus = 'suitable' | 'review' | 'avoid';
 
+export type FitStatus = 'GOOD_FIT' | 'REVIEW' | 'DOES_NOT_FIT' | 'INSUFFICIENT_INFORMATION';
+
 export type ProfileRole = 'self' | 'adult' | 'child' | 'baby' | 'other';
+
+export type LifeStage = 'me' | 'adult' | 'child' | 'teen' | 'baby' | 'pregnancy' | 'breastfeeding' | 'senior' | 'other';
 
 export type AgeGroup = 'baby' | 'child' | 'teen' | 'adult' | 'older_adult';
 
@@ -51,6 +55,8 @@ export interface Profile {
   dietaryPreferences: string[];
   allergies: string[];
   limits: string[];
+  goals: string[];
+  lifeStage: LifeStage | null;
   notes: string | null;
   isPrimary: boolean;
   healthContext?: HealthContext;
@@ -65,6 +71,8 @@ export interface ProfileInput {
   dietaryPreferences: string[];
   allergies: string[];
   limits: string[];
+  goals: string[];
+  lifeStage: LifeStage | null;
   notes: string | null;
   isPrimary: boolean;
 }
@@ -88,6 +96,7 @@ export interface FamilyMemberSummary {
   profileId: string;
   profileName: string;
   status: AnalysisStatus;
+  fit: FitStatus;
   statusLabel: string;
   headline: string;
 }
@@ -100,6 +109,7 @@ export interface FamilyScan {
   product: Product;
   familySummary: FamilyMemberSummary[];
   profiles: AnalysisResult[];
+  missingInformation?: string[];
 }
 
 export interface IngredientItem {
@@ -170,6 +180,7 @@ export interface ScanSummary {
   reviewCount: number;
   okayCount: number;
   importantCount: number;
+  insufficientCount: number;
   family: FamilyScan;
 }
 

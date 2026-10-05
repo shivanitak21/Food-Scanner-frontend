@@ -39,10 +39,14 @@ export function LabelCropper({
   photo,
   onRetake,
   onConfirm,
+  title = 'Frame the label',
+  hint = 'Drag and pinch so the text fills the frame, then confirm or retake.',
 }: {
   photo: Photo;
   onRetake: () => void;
   onConfirm: (uri: string) => void;
+  title?: string;
+  hint?: string;
 }) {
   const { colors, radius } = useTheme();
   const { width: windowWidth } = useWindowDimensions();
@@ -135,10 +139,10 @@ export function LabelCropper({
   return (
     <View style={styles.wrap}>
       <AppText variant="headline" style={styles.center}>
-        Frame the ingredient list
+        {title}
       </AppText>
       <AppText variant="body" color={colors.textSecondary} style={styles.center}>
-        Drag and pinch so the ingredients fill the frame, then confirm or retake.
+        {hint}
       </AppText>
       <View
         style={[

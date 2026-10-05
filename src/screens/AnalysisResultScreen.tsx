@@ -11,7 +11,7 @@ import { ProductVisual } from '@/components/design/ProductVisual';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { EvidenceItem, Finding } from '@/types/models';
+import type { EvidenceItem, Finding, FitStatus } from '@/types/models';
 import type { RootStackParamList } from '@/types/navigation';
 import { collectFindings, insightCopy } from '@/utils/presentation';
 
@@ -45,11 +45,11 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
       <FamilyReview members={scan.familySummary} selectedId={profileId} onSelect={setProfileId} />
 
       {selected && member ? (
-        <View style={[styles.verdict, { backgroundColor: colors[verdictTone(selected.status).soft], borderRadius: 22 }]}>
+        <View style={[styles.verdict, { backgroundColor: colors[fitTone(member.fit).soft], borderRadius: 22 }]}>
           <AppText variant="label" color={colors.textTertiary}>
-            {member.profileName}
+            Why this matters · {member.profileName}
           </AppText>
-          <AppText variant="display" style={{ color: colors[verdictTone(selected.status).ink] }}>
+          <AppText variant="display" style={{ color: colors[fitTone(member.fit).ink] }}>
             {member.statusLabel}
           </AppText>
           {findings.length > 0 ? (
@@ -62,19 +62,22 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
                   onPress={() => setSheet(finding)}
                   style={[styles.chip, { backgroundColor: colors.surface, borderRadius: 999 }]}
                 >
-                  <View style={[styles.dot, { backgroundColor: colors[verdictTone(selected.status).ink] }]} />
+                  <View style={[styles.dot, { backgroundColor: colors[fitTone(member.fit).ink] }]} />
                   <AppText variant="caption">{insightCopy(finding).title}</AppText>
                 </Pressable>
               ))}
             </View>
           ) : null}
-          {selected.summary ? (
+          {findings[0] ? (
             <View style={styles.recommend}>
-              <AppText variant="label" color={colors.textTertiary}>
-                Recommendation
+              <AppText variant="body" color={colors.textSecondary}>
+                {insightCopy(findings[0]).reason}
               </AppText>
-              <AppText variant="bodyMedium">{selected.summary}</AppText>
             </View>
+          ) : selected.summary ? (
+            <AppText variant="body" color={colors.textSecondary}>
+              {selected.summary}
+            </AppText>
           ) : null}
         </View>
       ) : null}
@@ -96,12 +99,13 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
   );
 }
 
-function verdictTone(status: 'suitable' | 'review' | 'avoid'): {
-  ink: 'suitable' | 'review' | 'avoid';
-  soft: 'suitableSoft' | 'reviewSoft' | 'avoidSoft';
+function fitTone(fit: FitStatus): {
+  ink: 'suitable' | 'review' | 'avoid' | 'info';
+  soft: 'suitableSoft' | 'reviewSoft' | 'avoidSoft' | 'infoSoft';
 } {
-  if (status === 'avoid') return { ink: 'avoid', soft: 'avoidSoft' };
-  if (status === 'review') return { ink: 'review', soft: 'reviewSoft' };
+  if (fit === 'DOES_NOT_FIT') return { ink: 'avoid', soft: 'avoidSoft' };
+  if (fit === 'REVIEW') return { ink: 'review', soft: 'reviewSoft' };
+  if (fit === 'INSUFFICIENT_INFORMATION') return { ink: 'info', soft: 'infoSoft' };
   return { ink: 'suitable', soft: 'suitableSoft' };
 }
 

@@ -13,6 +13,8 @@ function payload(input: ProfileInput) {
     dietaryPreferences: input.dietaryPreferences,
     allergies: input.allergies,
     limits: input.limits,
+    goals: input.goals,
+    lifeStage: input.lifeStage,
     notes: input.notes,
     isPrimary: input.isPrimary,
   };

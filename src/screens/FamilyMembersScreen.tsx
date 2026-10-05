@@ -6,7 +6,7 @@ import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/StateViews';
-import { ageGroupLabel, dietLabel, roleLabel } from '@/constants/profileOptions';
+import { ageGroupLabel, allergyLabel, dietLabel, lifeStageLabel, limitLabel, roleLabel } from '@/constants/profileOptions';
 import { useSelectedProfile } from '@/hooks/useSelectedProfile';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { Profile } from '@/types/models';
@@ -27,7 +27,7 @@ export function FamilyMembersScreen({ navigation }: Props) {
       refreshControl={<RefreshControl refreshing={isRefetching && !isLoading} tintColor={colors.primary} onRefresh={refetch} />}
     >
       <View style={styles.header}>
-        <AppText variant="display">Family</AppText>
+        <AppText variant="display">Your family</AppText>
         <AppText variant="body" color={colors.textSecondary}>
           {profiles.length} {profiles.length === 1 ? 'person' : 'people'}
         </AppText>
@@ -51,7 +51,7 @@ export function FamilyMembersScreen({ navigation }: Props) {
         style={styles.add}
       >
         <AppText variant="headline" color={colors.primary}>
-          + Add person
+          Add family member
         </AppText>
       </Pressable>
     </Screen>
@@ -60,12 +60,19 @@ export function FamilyMembersScreen({ navigation }: Props) {
 
 function ProfileRow({ profile, onPress }: { profile: Profile; onPress: () => void }) {
   const { colors } = useTheme();
-  const stage = ageGroupLabel(profile.ageGroup) ?? roleLabel(profile.role);
+  const stage = lifeStageLabel(profile.lifeStage) ?? ageGroupLabel(profile.ageGroup) ?? roleLabel(profile.role);
   const diet = dietLabel(profile.diet);
-  const restrictions = profile.allergies.length + profile.limits.length;
-  const meta = [stage, diet === 'No specific diet' ? null : diet, restrictions > 0 ? `${restrictions} limits` : null]
-    .filter(Boolean)
-    .join(' · ');
+  const watch =
+    profile.allergies[0]
+      ? `${allergyLabel(profile.allergies[0])} allergy`
+      : profile.limits.length > 0
+        ? profile.limits.length === 1
+          ? limitLabel(profile.limits[0])
+          : `${profile.limits.length} things to watch`
+        : diet === 'No specific diet'
+          ? profile.dietaryPreferences[0] ?? null
+          : diet;
+  const meta = [stage, watch].filter(Boolean).join(' · ');
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${profile.name}, ${meta}`} onPress={onPress} style={styles.row}>

@@ -77,10 +77,10 @@ export function HomeScreen({ navigation }: Props) {
         <AppText variant="title">Know what's inside.</AppText>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Scan product"
+          accessibilityLabel="Scan a product"
           onPress={() => {
             void tapHaptic();
-            openScan('barcode');
+            openScan('label');
           }}
           style={({ pressed }) => [
             styles.scan,
@@ -89,13 +89,11 @@ export function HomeScreen({ navigation }: Props) {
         >
           <Ionicons name="scan-outline" size={20} color={colors.onPrimary} />
           <AppText variant="bodyMedium" color={colors.onPrimary}>
-            Scan product
+            Scan a product
           </AppText>
         </Pressable>
         <View style={styles.secondary}>
-          <TextAction label="Scan barcode" onPress={() => openScan('barcode')} />
-          <View style={[styles.dot, { backgroundColor: colors.textTertiary }]} />
-          <TextAction label="Scan label" onPress={() => openScan('label')} />
+          <TextAction label="Scan barcode instead" onPress={() => openScan('barcode')} />
         </View>
       </View>
 
@@ -156,16 +154,23 @@ function TextAction({ label, onPress }: { label: string; onPress: () => void }) 
 
 function RecentRow({ scan, onPress }: { scan: ScanSummary; onPress: () => void }) {
   const { colors, radius } = useTheme();
+  const needs = scan.importantCount + scan.reviewCount;
   const summary =
-    scan.importantCount + scan.reviewCount > 0
-      ? `${scan.importantCount + scan.reviewCount} review${scan.importantCount + scan.reviewCount === 1 ? '' : 's'}`
-      : 'Can eat';
-  const quiet = scan.okayCount > 0 ? `${scan.okayCount} can eat` : null;
+    needs > 0
+      ? `${needs} need review`
+      : scan.insufficientCount > 0 && scan.okayCount === 0
+        ? 'Not enough information'
+        : 'Good fit for everyone';
+  const quiet = scan.importantCount > 0 ? `${scan.importantCount} doesn't fit` : null;
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={scan.productName} onPress={onPress} style={styles.recent}>
       {scan.imageUrl ? (
-        <Image source={{ uri: scan.imageUrl }} style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]} />
+        <Image
+          source={{ uri: scan.imageUrl }}
+          contentFit="cover"
+          style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]}
+        />
       ) : (
         <View style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]} />
       )}
@@ -178,7 +183,10 @@ function RecentRow({ scan, onPress }: { scan: ScanSummary; onPress: () => void }
           {[summary, quiet].filter(Boolean).join(' · ')}
         </AppText>
       </View>
-      <StatusMark status={scan.importantCount > 0 ? 'avoid' : scan.reviewCount > 0 ? 'review' : 'suitable'} label="" />
+      <StatusMark
+        status={scan.importantCount > 0 ? 'avoid' : scan.reviewCount > 0 || scan.insufficientCount > 0 ? 'review' : 'suitable'}
+        label=""
+      />
     </Pressable>
   );
 }
