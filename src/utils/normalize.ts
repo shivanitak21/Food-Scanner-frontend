@@ -300,9 +300,15 @@ export function normalizeProduct(value: unknown, fallbackName?: string): Product
 
 function resolveImageUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;
-  if (value.startsWith('http://') || value.startsWith('https://')) return value;
-  if (value.startsWith('/') && API_URL) return `${API_URL}${value}`;
-  return value;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (/^(file|content|ph|assets-library):/i.test(trimmed)) return undefined;
+  if (/^[a-zA-Z]:[\\/]/.test(trimmed) || trimmed.startsWith('\\\\')) return undefined;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (!API_URL) return undefined;
+  if (trimmed.startsWith('/')) return `${API_URL}${trimmed}`;
+  if (trimmed.startsWith('media/')) return `${API_URL}/${trimmed}`;
+  return undefined;
 }
 
 function normalizeScanType(value: unknown, fallback: 'barcode' | 'label'): 'barcode' | 'label' {
@@ -419,12 +425,15 @@ export function normalizeFamilyScan(value: unknown, hint?: { scanType?: 'barcode
     .map((item, index) => normalizeMember(item, profiles[index]))
     .filter((item): item is FamilyMemberSummary => item !== null);
 
+  const chosen = product.name ? product : (profiles[0]?.product ?? product);
+  const imageUrl = chosen.imageUrl || profiles.find((item) => item.product.imageUrl)?.product.imageUrl;
+
   return {
     id,
     createdAt,
     scanType,
     disclaimer: pickString(record, ['disclaimer', 'notice']) ?? profiles[0]?.disclaimer ?? DISCLAIMER,
-    product: product.name ? product : (profiles[0]?.product ?? product),
+    product: imageUrl ? { ...chosen, imageUrl } : chosen,
     familySummary: summary.length > 0 ? summary : profiles.map(memberFromAnalysis),
     profiles,
     missingInformation: stringList(record.missingInformation ?? record.missing_information),

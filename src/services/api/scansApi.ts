@@ -29,16 +29,29 @@ export async function scanBarcode(input: { barcode: string }): Promise<FamilySca
   return normalizeFamilyScan(response.data, { scanType: 'barcode' });
 }
 
+function packageFile(uri: string, name: string): Blob {
+  const normalized =
+    uri.startsWith('file://') ||
+    uri.startsWith('content://') ||
+    uri.startsWith('ph://') ||
+    uri.startsWith('assets-library:') ||
+    uri.startsWith('http://') ||
+    uri.startsWith('https://')
+      ? uri
+      : `file://${uri}`;
+  return {
+    uri: normalized,
+    name,
+    type: 'image/jpeg',
+  } as unknown as Blob;
+}
+
 export async function scanLabel(input: {
   uri: string;
   onProgress?: (ratio: number) => void;
 }): Promise<FamilyScan> {
   const form = new FormData();
-  form.append('image', {
-    uri: input.uri,
-    name: 'label.jpg',
-    type: 'image/jpeg',
-  } as unknown as Blob);
+  form.append('image', packageFile(input.uri, 'label.jpg'));
 
   const response = await api.post('/api/scans/label', form, {
     timeout: 90000,
@@ -58,11 +71,7 @@ export async function scanLabel(input: {
 export async function previewLabel(uris: string[]): Promise<LabelDraft> {
   const form = new FormData();
   uris.forEach((uri, index) => {
-    form.append('images', {
-      uri,
-      name: `label-${index}.jpg`,
-      type: 'image/jpeg',
-    } as unknown as Blob);
+    form.append('images', packageFile(uri, `label-${index}.jpg`));
   });
   const response = await api.post('/api/scans/label/preview', form, { timeout: 90000 });
   const record = response.data as LabelDraft;
@@ -114,11 +123,7 @@ export async function confirmLabel(input: {
   form.append('mayContain', JSON.stringify(input.mayContain));
   form.append('nutrition', JSON.stringify(input.nutrition));
   if (input.imageUri) {
-    form.append('image', {
-      uri: input.imageUri,
-      name: 'package.jpg',
-      type: 'image/jpeg',
-    } as unknown as Blob);
+    form.append('image', packageFile(input.imageUri, 'package.jpg'));
   }
   const response = await api.post('/api/scans/label/confirm', form, { timeout: 60000 });
   return normalizeFamilyScan(response.data, { scanType: 'label' });
