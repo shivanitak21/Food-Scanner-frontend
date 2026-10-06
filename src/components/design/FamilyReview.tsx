@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function FamilyReview({ members, selectedId, onSelect }: Props) {
-  const { colors, radius } = useTheme();
+  const { colors } = useTheme();
   const held = members.filter((member) => member.fit !== 'GOOD_FIT').length;
 
   return (
@@ -20,8 +20,8 @@ export function FamilyReview({ members, selectedId, onSelect }: Props) {
         <AppText variant="label" color={colors.textTertiary}>
           Family fit
         </AppText>
-        <AppText variant="caption" color={colors.textTertiary}>
-          {held === 0 ? 'Good fit for everyone' : `${members.length - held} good fit`}
+        <AppText variant="caption" color={colors.textSecondary}>
+          {held === 0 ? 'Good fit for everyone' : `${held} to review`}
         </AppText>
       </View>
       {members.map((member) => {
@@ -34,27 +34,22 @@ export function FamilyReview({ members, selectedId, onSelect }: Props) {
             accessibilityLabel={`${member.profileName}, ${member.statusLabel}`}
             accessibilityState={{ selected }}
             onPress={() => onSelect(member.profileId)}
-            style={[
-              styles.card,
-              {
-                backgroundColor: selected ? colors[tone.soft] : colors.surface,
-                borderColor: selected ? colors[tone.ink] : colors.border,
-                borderRadius: radius.md,
-              },
-            ]}
+            style={[styles.row, selected && { backgroundColor: colors.surfaceMuted, borderRadius: 16 }]}
           >
-            <View style={[styles.mark, { backgroundColor: colors[tone.ink] }]} />
-            <View style={styles.copy}>
-              <AppText variant="headline">{member.profileName}</AppText>
-              {member.fit !== 'GOOD_FIT' && member.headline ? (
-                <AppText variant="caption" color={colors.textSecondary} numberOfLines={1}>
-                  {member.headline}
-                </AppText>
-              ) : null}
+            <View style={[styles.avatar, { backgroundColor: colors.cream }]}>
+              <AppText variant="bodyMedium" color={colors.primary}>
+                {member.profileName.slice(0, 1).toUpperCase()}
+              </AppText>
             </View>
-            <AppText variant="bodyMedium" color={colors[tone.ink]}>
-              {member.statusLabel}
+            <AppText variant="headline" style={styles.name}>
+              {member.profileName}
             </AppText>
+            <View style={styles.status}>
+              <View style={[styles.dot, { backgroundColor: colors[tone] }]} />
+              <AppText variant="bodyMedium" color={colors[tone]}>
+                {member.statusLabel}
+              </AppText>
+            </View>
           </Pressable>
         );
       })}
@@ -62,25 +57,25 @@ export function FamilyReview({ members, selectedId, onSelect }: Props) {
   );
 }
 
-function fitTone(fit: FitStatus): { ink: 'suitable' | 'review' | 'avoid' | 'info'; soft: 'suitableSoft' | 'reviewSoft' | 'avoidSoft' | 'infoSoft' } {
-  if (fit === 'DOES_NOT_FIT') return { ink: 'avoid', soft: 'avoidSoft' };
-  if (fit === 'REVIEW') return { ink: 'review', soft: 'reviewSoft' };
-  if (fit === 'INSUFFICIENT_INFORMATION') return { ink: 'info', soft: 'infoSoft' };
-  return { ink: 'suitable', soft: 'suitableSoft' };
+function fitTone(fit: FitStatus): 'suitable' | 'review' | 'avoid' | 'info' {
+  if (fit === 'DOES_NOT_FIT') return 'avoid';
+  if (fit === 'REVIEW') return 'review';
+  if (fit === 'INSUFFICIENT_INFORMATION') return 'info';
+  return 'suitable';
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8, marginTop: 8 },
-  heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  card: {
-    minHeight: 72,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+  wrap: { gap: 4, marginTop: 8 },
+  heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 },
+  row: {
+    minHeight: 64,
+    paddingHorizontal: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  mark: { width: 8, height: 36, borderRadius: 4 },
-  copy: { flex: 1, gap: 2 },
+  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  name: { flex: 1 },
+  status: { flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '46%' },
+  dot: { width: 8, height: 8, borderRadius: 4 },
 });

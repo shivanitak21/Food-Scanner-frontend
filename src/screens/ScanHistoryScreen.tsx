@@ -23,11 +23,12 @@ type Props = CompositeScreenProps<
 export function ScanHistoryScreen({ navigation }: Props) {
   const { colors, spacing } = useTheme();
   const history = useScanHistory();
+  const entries = groupHistory(history.data ?? []);
 
   if (history.isLoading) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={[styles.fill, { backgroundColor: colors.background }]}>
-        <LoadingState message="History" />
+        <LoadingState message="Gathering your scans" />
       </SafeAreaView>
     );
   }
@@ -43,7 +44,7 @@ export function ScanHistoryScreen({ navigation }: Props) {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.fill, { backgroundColor: colors.background }]}>
       <FlashList
-        data={history.data ?? []}
+        data={entries}
         keyExtractor={(item) => item.id}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.huge }}
@@ -51,27 +52,61 @@ export function ScanHistoryScreen({ navigation }: Props) {
         onRefresh={() => void history.refetch()}
         ListHeaderComponent={
           <View style={styles.header}>
+            <AppText variant="label" color={colors.textTertiary}>
+              Recent
+            </AppText>
             <AppText variant="display">History</AppText>
           </View>
         }
-        ListEmptyComponent={<EmptyState icon="time-outline" title="No scans yet" message="Products you scan will gather here." />}
-        renderItem={({ item }: { item: ScanSummary }) => (
-          <HistoryRow item={item} onPress={() => navigation.navigate('AnalysisResult', { scan: item.family })} />
-        )}
+        ListEmptyComponent={
+          <EmptyState icon="scan-outline" title="Your food history starts here." message="Products you scan will gather here, with who they fit." />
+        }
+        getItemType={(row) => row.kind}
+        renderItem={({ item }: { item: HistoryEntry }) =>
+          item.kind === 'day' ? (
+            <AppText variant="label" color={colors.textTertiary} style={styles.day}>
+              {item.label}
+            </AppText>
+          ) : (
+            <HistoryRow item={item.scan} onPress={() => navigation.navigate('AnalysisResult', { scan: item.scan.family })} />
+          )
+        }
       />
     </SafeAreaView>
   );
+}
+
+type HistoryEntry = { kind: 'day'; id: string; label: string } | { kind: 'scan'; id: string; scan: ScanSummary };
+
+function groupHistory(items: ScanSummary[]): HistoryEntry[] {
+  const rows: HistoryEntry[] = [];
+  let last = '';
+  for (const scan of items) {
+    const day = formatDay(scan.createdAt);
+    if (day !== last) {
+      rows.push({ kind: 'day', id: `day-${day}-${scan.id}`, label: day });
+      last = day;
+    }
+    rows.push({ kind: 'scan', id: scan.id, scan });
+  }
+  return rows;
 }
 
 function HistoryRow({ item, onPress }: { item: ScanSummary; onPress: () => void }) {
   const { colors, radius } = useTheme();
   const needs = item.reviewCount + item.importantCount;
   const line =
-    needs > 0
-      ? `${needs} need review`
-      : item.insufficientCount > 0 && item.okayCount === 0
-        ? 'Not enough information'
-        : 'Good fit for everyone';
+    item.importantCount > 0
+      ? item.importantCount === 1
+        ? "1 profile doesn't fit"
+        : `${item.importantCount} profiles don't fit`
+      : needs > 0
+        ? needs === 1
+          ? '1 profile needs review'
+          : `${needs} profiles need review`
+        : item.insufficientCount > 0 && item.okayCount === 0
+          ? 'Not enough information'
+          : 'Good fit for everyone';
 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={item.productName} onPress={onPress} style={styles.row}>
@@ -85,15 +120,12 @@ function HistoryRow({ item, onPress }: { item: ScanSummary; onPress: () => void 
         <View style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]} />
       )}
       <View style={styles.copy}>
-        <AppText variant="headline">{item.productName}</AppText>
-        <AppText variant="caption" color={colors.textSecondary}>
-          {formatDay(item.createdAt)}
+        <AppText variant="headline" numberOfLines={2}>
+          {item.productName}
         </AppText>
-        {line ? (
-          <AppText variant="caption" color={colors.textTertiary}>
-            {line}
-          </AppText>
-        ) : null}
+        <AppText variant="caption" color={colors.textSecondary}>
+          {line}
+        </AppText>
       </View>
     </Pressable>
   );
@@ -102,7 +134,8 @@ function HistoryRow({ item, onPress }: { item: ScanSummary; onPress: () => void 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   padded: { padding: 24, justifyContent: 'center' },
-  header: { paddingTop: 12, paddingBottom: 20 },
+  header: { paddingTop: 12, paddingBottom: 8, gap: 6 },
+  day: { marginTop: 18, marginBottom: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 84 },
   thumb: { width: 64, height: 64 },
   copy: { flex: 1, gap: 2 },

@@ -34,8 +34,8 @@ const PROGRESS: { id: 'package' | 'ingredients' | 'nutrition' | 'analysis'; labe
 
 const CAPTURE_COPY: Record<Section, { frame: string; title: string; hint: string }> = {
   front: {
-    frame: 'Move the package into frame',
-    title: 'Frame the front',
+    frame: 'Make sure the text is clear.',
+    title: 'Capture the package',
     hint: 'Include the brand and product name.',
   },
   ingredients: {
@@ -233,9 +233,11 @@ export function LabelCameraScreen({ navigation, route }: Props) {
       <Screen edges={['top', 'left', 'right']}>
         <ProgressRow stateFor={progressState} />
         <AppText variant="label" color={colors.textTertiary}>
-          Please confirm
+          {draft.sections.ingredients === 'ready' ? 'Ready' : 'Check this'}
         </AppText>
-        <AppText variant="display">We read this</AppText>
+        <AppText variant="display">
+          {draft.sections.ingredients === 'ready' ? 'Your product is ready.' : 'We read this'}
+        </AppText>
         <TextInput
           value={productName}
           onChangeText={setProductName}
@@ -263,7 +265,11 @@ export function LabelCameraScreen({ navigation, route }: Props) {
             {failure}
           </AppText>
         ) : null}
-        <Button label="Check my family" onPress={() => void analyze()} disabled={productName.trim().length < 1} />
+        <Button
+          label={draft.sections.ingredients === 'ready' ? 'View results' : 'Check my family'}
+          onPress={() => void analyze()}
+          disabled={productName.trim().length < 1}
+        />
         <Button
           label="Retake this photo"
           variant="secondary"
@@ -288,11 +294,16 @@ export function LabelCameraScreen({ navigation, route }: Props) {
         </View>
         <View style={styles.frameWrap}>
           <View style={styles.frame}>
-            <ScanLine height={220} />
+            <ScanLine height={300} />
           </View>
-          <AppText variant="bodyMedium" color="#F7F5F0" style={styles.center}>
-            {failure ?? copy.frame}
-          </AppText>
+          <View style={styles.caption}>
+            <AppText variant="title" color="#F7F5F0" style={styles.center}>
+              {failure ? 'The package is a little hard to read.' : copy.title}
+            </AppText>
+            <AppText variant="body" color="rgba(247,245,240,0.78)" style={styles.center}>
+              {failure ?? copy.frame}
+            </AppText>
+          </View>
         </View>
         <View style={styles.bottom}>
           {failure ? (
@@ -344,7 +355,7 @@ const styles = StyleSheet.create({
   frame: {
     width: '100%',
     maxWidth: 340,
-    height: 220,
+    height: 300,
     borderRadius: 28,
     borderWidth: 1.5,
     borderColor: 'rgba(247, 245, 240, 0.9)',
@@ -352,6 +363,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   center: { textAlign: 'center' },
+  caption: { gap: 6, paddingHorizontal: 12 },
   bottom: { alignItems: 'center', gap: 12 },
   shutter: { width: 74, height: 74, borderRadius: 37, borderWidth: 3, borderColor: '#F7F5F0', alignItems: 'center', justifyContent: 'center' },
   shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#F7F5F0' },

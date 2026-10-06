@@ -5,8 +5,8 @@ import { useTheme } from '@/theme/ThemeProvider';
 type Variant = 'display' | 'title' | 'headline' | 'body' | 'bodyMedium' | 'label' | 'caption' | 'numeric';
 
 const variantStyle: Record<Variant, TextStyle> = {
-  display: { fontSize: 34, lineHeight: 40, letterSpacing: -0.6 },
-  title: { fontSize: 28, lineHeight: 34, letterSpacing: -0.4 },
+  display: { fontSize: 36, lineHeight: 42, letterSpacing: -0.4 },
+  title: { fontSize: 28, lineHeight: 34, letterSpacing: -0.3 },
   headline: { fontSize: 17, lineHeight: 22, letterSpacing: -0.2 },
   body: { fontSize: 16, lineHeight: 22 },
   bodyMedium: { fontSize: 16, lineHeight: 22 },

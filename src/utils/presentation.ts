@@ -1,7 +1,7 @@
 import type Ionicons from '@expo/vector-icons/Ionicons';
 
 import { STATUS_FALLBACK_LABEL } from '@/constants/copy';
-import type { AnalysisResult, AnalysisStatus, Finding, NutritionItem, ScanSummary } from '@/types/models';
+import type { AnalysisResult, AnalysisStatus, FamilyScan, Finding, NutritionItem, ScanSummary } from '@/types/models';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -153,4 +153,86 @@ export function formatAmount(item: NutritionItem): string {
 
 export function isCalorie(item: NutritionItem): boolean {
   return /calorie|energy|kcal/i.test(item.name);
+}
+
+export type ProductSignal = {
+  amount: string | null;
+  title: string;
+  basis: string | null;
+  notes: string[];
+};
+
+function servingBasis(finding: Finding): string | null {
+  const source = `${finding.title} ${finding.explanation} ${finding.evidence ?? ''}`;
+  if (/100\s*g/i.test(source)) return 'per 100 g';
+  if (/serving/i.test(source)) return 'per serving';
+  return null;
+}
+
+export function productSignal(scan: FamilyScan): ProductSignal | null {
+  const buckets = new Map<string, { title: string; measure: string | null; basis: string | null; profiles: Set<string> }>();
+
+  for (const profile of scan.profiles) {
+    const profileKey = profile.profileId || profile.profileName || profile.id;
+    for (const finding of importantFindings(profile)) {
+      if (finding.severity === 'info' && finding.insightType !== 'HEALTH_CONTEXT') continue;
+      const copy = insightCopy(finding);
+      const key = (finding.nutrient || copy.title).toLowerCase();
+      const current = buckets.get(key);
+      if (current) {
+        current.profiles.add(profileKey);
+        if (!current.measure && copy.measure) current.measure = copy.measure;
+        if (!current.basis) current.basis = servingBasis(finding);
+      } else {
+        buckets.set(key, {
+          title: copy.title,
+          measure: copy.measure,
+          basis: servingBasis(finding),
+          profiles: new Set([profileKey]),
+        });
+      }
+    }
+  }
+
+  const ranked = [...buckets.values()].sort((left, right) => {
+    const measured = Number(Boolean(right.measure)) - Number(Boolean(left.measure));
+    if (measured !== 0) return measured;
+    return right.profiles.size - left.profiles.size;
+  });
+  const top = ranked[0];
+  const blob = [scan.product.ingredientsText ?? '', ...scan.product.ingredients.map((item) => item.name)].join(' ');
+  const dairy = /butter|milk|cream|cheese|ghee|whey|casein|lactose|dairy/i.test(blob);
+  const notes: string[] = [];
+  if (dairy) notes.push('Contains dairy');
+  if (top && top.profiles.size > 0) {
+    notes.push(
+      top.profiles.size === 1 ? 'Relevant to 1 family member' : `Relevant to ${top.profiles.size} family members`,
+    );
+  }
+
+  if (!top) {
+    const everyoneFits = scan.familySummary.length > 0 && scan.familySummary.every((member) => member.fit === 'GOOD_FIT');
+    if (everyoneFits) return { amount: null, title: 'Good fit for everyone', basis: null, notes };
+    if (notes.length === 0) return null;
+    return { amount: null, title: notes[0], basis: null, notes: notes.slice(1) };
+  }
+
+  return {
+    amount: top.measure,
+    title: top.title,
+    basis: top.basis,
+    notes,
+  };
+}
+
+export function orderNutrition(items: NutritionItem[], focus: string[]): NutritionItem[] {
+  const keys = focus.map((item) => item.toLowerCase()).filter(Boolean);
+  const rank = (item: NutritionItem) => {
+    const name = item.name.toLowerCase();
+    const match = keys.findIndex((key) => name.includes(key) || key.includes(name));
+    if (match >= 0) return match;
+    if (isCalorie(item)) return 20;
+    return 40;
+  };
+  return [...items].sort((left, right) => rank(left) - rank(right));
 }

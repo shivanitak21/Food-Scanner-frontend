@@ -22,7 +22,7 @@ export function AnalysisLoader({ subtitle }: { subtitle?: string }) {
   return (
     <View style={styles.wrap} accessibilityRole="progressbar" accessibilityLabel="Analyzing your food">
       <View style={[styles.mark, { backgroundColor: colors.primarySoft, borderRadius: radius.xl }]}>
-        <Ionicons name="sparkles-outline" size={28} color={colors.primary} />
+        <Ionicons name="scan-outline" size={28} color={colors.primary} />
       </View>
       <AppText variant="title" style={styles.center}>
         Analyzing your food

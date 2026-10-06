@@ -35,7 +35,13 @@ export function FamilyMembersScreen({ navigation }: Props) {
       {isLoading ? <LoadingState message="Family" /> : null}
       {isError ? <ErrorState message={getErrorMessage(error)} onRetry={refetch} /> : null}
       {!isLoading && !isError && profiles.length === 0 ? (
-        <EmptyState icon="people-outline" title="No one here yet" message="Add the people a scan should be reviewed for." />
+        <EmptyState
+          icon="people-outline"
+          title="Add your family"
+          message="Add your family to see who each product fits."
+          actionLabel="Add family member"
+          onAction={() => navigation.navigate('FamilyMemberForm', {})}
+        />
       ) : null}
       {profiles.map((profile) => (
         <ProfileRow
@@ -44,16 +50,18 @@ export function FamilyMembersScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('FamilyMemberForm', { profileId: profile.id })}
         />
       ))}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Add person"
-        onPress={() => navigation.navigate('FamilyMemberForm', {})}
-        style={styles.add}
-      >
-        <AppText variant="headline" color={colors.primary}>
-          Add family member
-        </AppText>
-      </Pressable>
+      {profiles.length > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add family member"
+          onPress={() => navigation.navigate('FamilyMemberForm', {})}
+          style={styles.add}
+        >
+          <AppText variant="headline" color={colors.primary}>
+            Add family member
+          </AppText>
+        </Pressable>
+      ) : null}
     </Screen>
   );
 }
@@ -75,7 +83,12 @@ function ProfileRow({ profile, onPress }: { profile: Profile; onPress: () => voi
   const meta = [stage, watch].filter(Boolean).join(' · ');
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${profile.name}, ${meta}`} onPress={onPress} style={styles.row}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${profile.name}, ${meta}`}
+      onPress={onPress}
+      style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 20 }]}
+    >
       <View style={[styles.avatar, { backgroundColor: colors.cream }]}>
         <AppText variant="headline" color={colors.primary}>
           {profile.name.slice(0, 1).toUpperCase()}
@@ -87,13 +100,16 @@ function ProfileRow({ profile, onPress }: { profile: Profile; onPress: () => voi
           {meta}
         </AppText>
       </View>
+      <AppText variant="caption" color={colors.textTertiary}>
+        Edit
+      </AppText>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   header: { gap: 4, marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 76 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 84, paddingHorizontal: 16, borderWidth: 1 },
   avatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, gap: 2 },
   add: { minHeight: 56, justifyContent: 'center', marginTop: 8 },

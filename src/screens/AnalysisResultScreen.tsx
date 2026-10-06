@@ -1,29 +1,32 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { DetailSheet } from '@/components/design/DetailSheet';
 import { FamilyReview } from '@/components/design/FamilyReview';
 import { IngredientList } from '@/components/design/IngredientList';
 import { NutritionBlock } from '@/components/design/NutritionBlock';
 import { ProductVisual } from '@/components/design/ProductVisual';
+import { WhatToKnow } from '@/components/design/WhatToKnow';
+import { WhyThisMatters } from '@/components/design/WhyThisMatters';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { EvidenceItem, Finding, FitStatus } from '@/types/models';
+import type { EvidenceItem, FamilyMemberSummary, Finding } from '@/types/models';
 import type { RootStackParamList } from '@/types/navigation';
-import { collectFindings, insightCopy } from '@/utils/presentation';
+import { collectFindings, insightCopy, productSignal } from '@/utils/presentation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AnalysisResult'>;
 
 export function AnalysisResultScreen({ navigation, route }: Props) {
   const { colors } = useTheme();
+  const { height } = useWindowDimensions();
   const scan = route.params.scan;
   const [profileId, setProfileId] = useState(scan.familySummary[0]?.profileId ?? scan.profiles[0]?.profileId);
   const [sheet, setSheet] = useState<Finding | null>(null);
-  const selected =
-    scan.profiles.find((profile) => profile.profileId === profileId) ?? scan.profiles[0] ?? null;
+  const [profileOpen, setProfileOpen] = useState(false);
+  const selected = scan.profiles.find((profile) => profile.profileId === profileId) ?? scan.profiles[0] ?? null;
   const member = scan.familySummary.find((item) => item.profileId === profileId) ?? scan.familySummary[0];
   const findings = useMemo(
     () =>
@@ -32,8 +35,19 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
         : [],
     [selected],
   );
-  const evidence = selected?.evidence.filter((item) => item.title !== 'Limit of this screen').slice(0, 2) ?? [];
+  const signal = useMemo(() => productSignal(scan), [scan]);
+  const focus = findings.map((finding) => finding.nutrient || insightCopy(finding).title);
+  const points = findings.slice(0, 2).map((finding) => {
+    const copy = insightCopy(finding);
+    return { id: finding.id, title: copy.title, measure: copy.measure, reason: copy.reason };
+  });
+  const evidence = selected?.evidence.filter((item) => item.title !== 'Limit of this screen').slice(0, 3) ?? [];
   const limitation = selected?.evidence.find((item) => /limit/i.test(item.title));
+
+  const openProfile = (id: string) => {
+    setProfileId(id);
+    setProfileOpen(true);
+  };
 
   return (
     <Screen edges={['top', 'left', 'right']}>
@@ -42,71 +56,131 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
       </Pressable>
       <ProductVisual name={scan.product.name} brand={scan.product.brand} imageUrl={scan.product.imageUrl} />
 
-      <FamilyReview members={scan.familySummary} selectedId={profileId} onSelect={setProfileId} />
+      <FamilyReview members={scan.familySummary} selectedId={profileId} onSelect={openProfile} />
 
-      {selected && member ? (
-        <View style={[styles.verdict, { backgroundColor: colors[fitTone(member.fit).soft], borderRadius: 22 }]}>
-          <AppText variant="label" color={colors.textTertiary}>
-            Why this matters · {member.profileName}
-          </AppText>
-          <AppText variant="display" style={{ color: colors[fitTone(member.fit).ink] }}>
-            {member.statusLabel}
-          </AppText>
-          {findings.length > 0 ? (
-            <View style={styles.chips}>
-              {findings.slice(0, 4).map((finding) => (
-                <Pressable
-                  key={finding.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={insightCopy(finding).title}
-                  onPress={() => setSheet(finding)}
-                  style={[styles.chip, { backgroundColor: colors.surface, borderRadius: 999 }]}
-                >
-                  <View style={[styles.dot, { backgroundColor: colors[fitTone(member.fit).ink] }]} />
-                  <AppText variant="caption">{insightCopy(finding).title}</AppText>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-          {findings[0] ? (
-            <View style={styles.recommend}>
-              <AppText variant="body" color={colors.textSecondary}>
-                {insightCopy(findings[0]).reason}
-              </AppText>
-            </View>
-          ) : selected.summary ? (
-            <AppText variant="body" color={colors.textSecondary}>
-              {selected.summary}
-            </AppText>
-          ) : null}
-        </View>
+      {signal ? <WhatToKnow signal={signal} /> : null}
+
+      {member ? (
+        <WhyThisMatters
+          name={member.profileName}
+          points={points}
+          onExplain={findings[0] ? () => setSheet(findings[0]) : undefined}
+        />
       ) : null}
 
-      <NutritionBlock items={selected?.nutrition.length ? selected.nutrition : scan.product.nutrition} />
+      <NutritionBlock items={selected?.nutrition.length ? selected.nutrition : scan.product.nutrition} focus={focus} />
       <IngredientList
         items={selected?.ingredients.length ? selected.ingredients : scan.product.ingredients}
         onPress={(ingredient) => navigation.navigate('IngredientDetails', { ingredient, productName: scan.product.name })}
       />
 
+      {evidence.length > 0 ? (
+        <View style={styles.sources}>
+          <AppText variant="label" color={colors.textTertiary}>
+            Sources
+          </AppText>
+          {evidence.map((item) => (
+            <AppText key={item.id} variant="caption" color={colors.textSecondary}>
+              {[item.title, item.source].filter(Boolean).join(' · ')}
+            </AppText>
+          ))}
+        </View>
+      ) : null}
+
       <AppText variant="caption" color={colors.textTertiary}>
         Food information for your profiles. Not a medical diagnosis.
       </AppText>
 
-      <DetailSheet visible={Boolean(sheet)} title={sheet?.insightType === 'HEALTH_CONTEXT' ? 'Why this matters' : sheet ? insightCopy(sheet).title : 'Details'} onClose={() => setSheet(null)}>
+      <DetailSheet
+        visible={profileOpen && Boolean(member)}
+        title={member?.profileName ?? 'Profile'}
+        onClose={() => setProfileOpen(false)}
+      >
+        {member && selected ? (
+          <ScrollView style={{ maxHeight: height * 0.62 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.sheet}>
+            <ProfileDetail member={member} findings={findings} evidence={evidence} limitation={limitation} />
+          </ScrollView>
+        ) : null}
+      </DetailSheet>
+
+      <DetailSheet
+        visible={Boolean(sheet)}
+        title={sheet?.insightType === 'HEALTH_CONTEXT' ? 'Why this matters' : sheet ? insightCopy(sheet).title : 'Details'}
+        onClose={() => setSheet(null)}
+      >
         {sheet ? <FindingDetail finding={sheet} evidence={evidence} limitation={limitation} /> : null}
       </DetailSheet>
     </Screen>
   );
 }
 
-function fitTone(fit: FitStatus): {
-  ink: 'suitable' | 'review' | 'avoid' | 'info';
-  soft: 'suitableSoft' | 'reviewSoft' | 'avoidSoft' | 'infoSoft';
-} {
-  if (fit === 'DOES_NOT_FIT') return { ink: 'avoid', soft: 'avoidSoft' };
-  if (fit === 'REVIEW') return { ink: 'review', soft: 'reviewSoft' };
-  if (fit === 'INSUFFICIENT_INFORMATION') return { ink: 'info', soft: 'infoSoft' };
-  return { ink: 'suitable', soft: 'suitableSoft' };
+function ProfileDetail({
+  member,
+  findings,
+  evidence,
+  limitation,
+}: {
+  member: FamilyMemberSummary;
+  findings: Finding[];
+  evidence: EvidenceItem[];
+  limitation?: EvidenceItem;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.sheet}>
+      <AppText variant="title">{member.statusLabel}</AppText>
+      {findings.length > 0 ? (
+        <View style={styles.sheet}>
+          <AppText variant="label" color={colors.textTertiary}>
+            Top concerns
+          </AppText>
+          {findings.slice(0, 4).map((finding) => {
+            const copy = insightCopy(finding);
+            return (
+              <View key={finding.id} style={styles.point}>
+                <AppText variant="headline">{copy.title}</AppText>
+                {copy.measure ? (
+                  <AppText variant="caption" color={colors.textSecondary}>
+                    {copy.measure}
+                  </AppText>
+                ) : null}
+                <AppText variant="body" color={colors.textSecondary}>
+                  {copy.reason}
+                </AppText>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <AppText variant="body" color={colors.textSecondary}>
+          {member.headline || member.statusLabel}
+        </AppText>
+      )}
+      {evidence[0] ? (
+        <View style={styles.sheet}>
+          <AppText variant="label" color={colors.textTertiary}>
+            Evidence
+          </AppText>
+          <AppText variant="bodyMedium">{evidence[0].title}</AppText>
+          {evidence[0].detail ? (
+            <AppText variant="caption" color={colors.textSecondary}>
+              {evidence[0].detail}
+            </AppText>
+          ) : null}
+          {evidence[0].source ? (
+            <AppText variant="caption" color={colors.textTertiary}>
+              {evidence[0].source}
+            </AppText>
+          ) : null}
+        </View>
+      ) : null}
+      {limitation?.detail ? (
+        <AppText variant="caption" color={colors.textTertiary}>
+          {limitation.detail}
+        </AppText>
+      ) : null}
+    </View>
+  );
 }
 
 function FindingDetail({
@@ -130,9 +204,7 @@ function FindingDetail({
           {finding.evidence || copy.reason}
         </AppText>
       ) : null}
-      {copy.measure ? (
-        <AppText variant="numeric">{copy.measure}</AppText>
-      ) : null}
+      {copy.measure ? <AppText variant="numeric">{copy.measure}</AppText> : null}
       <AppText variant="body" color={colors.textSecondary}>
         {copy.reason}
       </AppText>
@@ -165,10 +237,7 @@ function FindingDetail({
 
 const styles = StyleSheet.create({
   back: { width: 44, height: 44, justifyContent: 'center' },
-  verdict: { gap: 10, marginTop: 16, padding: 18 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { minHeight: 36, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  recommend: { gap: 4 },
-  sheet: { gap: 8 },
+  sources: { gap: 6 },
+  sheet: { gap: 12 },
+  point: { gap: 2 },
 });

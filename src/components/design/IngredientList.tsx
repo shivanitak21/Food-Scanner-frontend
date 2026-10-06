@@ -37,6 +37,13 @@ export function IngredientList({
                 {ingredientCategory(item.name, item.details)}
               </AppText>
             </View>
+            {item.flagged ? (
+              <View style={[styles.tag, { backgroundColor: colors.reviewSoft }]}>
+                <AppText variant="caption" color={colors.review}>
+                  Relevant
+                </AppText>
+              </View>
+            ) : null}
             <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
           </Pressable>
         </View>
@@ -50,5 +57,6 @@ const styles = StyleSheet.create({
   row: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 12 },
   copy: { flex: 1, gap: 2 },
   dot: { width: 7, height: 7, borderRadius: 4 },
+  tag: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
   rule: { height: StyleSheet.hairlineWidth },
 });

@@ -26,7 +26,7 @@ export function Button({
   icon,
   fullWidth = true,
 }: Props) {
-  const { colors, radius, fonts } = useTheme();
+  const { colors, fonts } = useTheme();
   const inactive = disabled || loading;
 
   const palette = {
@@ -52,7 +52,7 @@ export function Button({
         {
           backgroundColor: palette.background,
           borderColor: palette.border,
-          borderRadius: radius.pill,
+          borderRadius: 16,
           opacity: inactive ? 0.55 : pressed ? 0.88 : 1,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
         },

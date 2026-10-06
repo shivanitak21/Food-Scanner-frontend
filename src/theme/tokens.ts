@@ -1,26 +1,30 @@
-import { Platform, type TextStyle } from 'react-native';
+import type { TextStyle } from 'react-native';
 
 type FontFace = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
 
-const jakarta = {
-  regular: 'PlusJakartaSans_400Regular',
-  medium: 'PlusJakartaSans_500Medium',
-  semibold: 'PlusJakartaSans_600SemiBold',
-  bold: 'PlusJakartaSans_700Bold',
+const manrope = {
+  regular: 'Manrope_400Regular',
+  medium: 'Manrope_500Medium',
+  semibold: 'Manrope_600SemiBold',
+  bold: 'Manrope_700Bold',
 } as const;
 
-function face(weight: TextStyle['fontWeight'], androidFamily: string): FontFace {
-  if (Platform.OS === 'ios') return { fontWeight: weight };
-  return { fontFamily: androidFamily, fontWeight: 'normal' };
+const serif = {
+  regular: 'DMSerifDisplay_400Regular',
+  italic: 'DMSerifDisplay_400Regular_Italic',
+} as const;
+
+function face(family: string): FontFace {
+  return { fontFamily: family, fontWeight: 'normal' };
 }
 
 export const fonts = {
-  display: face('700', jakarta.bold),
-  displayItalic: face('600', jakarta.semibold),
-  body: face('400', jakarta.regular),
-  bodyMedium: face('500', jakarta.medium),
-  bodySemibold: face('600', jakarta.semibold),
-  bodyBold: face('700', jakarta.bold),
+  display: face(serif.regular),
+  displayItalic: face(serif.italic),
+  body: face(manrope.regular),
+  bodyMedium: face(manrope.medium),
+  bodySemibold: face(manrope.semibold),
+  bodyBold: face(manrope.bold),
 };
 
 export const iconSize = {
