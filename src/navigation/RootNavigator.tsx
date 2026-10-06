@@ -57,7 +57,7 @@ export function RootNavigator() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
-          headerTitleStyle: { fontFamily: fonts.bodySemibold, fontSize: 17 },
+          headerTitleStyle: { ...fonts.bodySemibold, fontSize: 17 },
           headerBackButtonDisplayMode: 'minimal',
           contentStyle: { backgroundColor: colors.background },
         }}

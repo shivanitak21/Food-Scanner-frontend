@@ -1,11 +1,27 @@
-export const fonts = {
-  display: 'DMSerifDisplay_400Regular',
-  displayItalic: 'DMSerifDisplay_400Regular_Italic',
-  body: 'Manrope_400Regular',
-  bodyMedium: 'Manrope_500Medium',
-  bodySemibold: 'Manrope_600SemiBold',
-  bodyBold: 'Manrope_600SemiBold',
+import { Platform, type TextStyle } from 'react-native';
+
+type FontFace = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
+
+const jakarta = {
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semibold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
 } as const;
+
+function face(weight: TextStyle['fontWeight'], androidFamily: string): FontFace {
+  if (Platform.OS === 'ios') return { fontWeight: weight };
+  return { fontFamily: androidFamily, fontWeight: 'normal' };
+}
+
+export const fonts = {
+  display: face('700', jakarta.bold),
+  displayItalic: face('600', jakarta.semibold),
+  body: face('400', jakarta.regular),
+  bodyMedium: face('500', jakarta.medium),
+  bodySemibold: face('600', jakarta.semibold),
+  bodyBold: face('700', jakarta.bold),
+};
 
 export const iconSize = {
   sm: 16,

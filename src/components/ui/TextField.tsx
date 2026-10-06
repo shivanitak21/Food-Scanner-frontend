@@ -36,7 +36,7 @@ export function TextField({ label, error, secureTextEntry, multiline, style, ...
           secureTextEntry={secureTextEntry ? hidden : false}
           multiline={multiline}
           textAlignVertical={multiline ? 'top' : 'center'}
-          style={[styles.input, { color: colors.text, fontFamily: fonts.body }, style]}
+          style={[styles.input, { color: colors.text, ...fonts.body }, style]}
           {...props}
         />
         {secureTextEntry ? (

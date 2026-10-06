@@ -63,7 +63,7 @@ export function Button({
       ) : (
         <View style={styles.content}>
           {icon ? <Ionicons name={icon} size={18} color={palette.text} /> : null}
-          <AppText style={{ color: palette.text, fontFamily: fonts.bodySemibold, fontSize: 16 }}>{label}</AppText>
+          <AppText style={{ color: palette.text, ...fonts.bodySemibold, fontSize: 16 }}>{label}</AppText>
         </View>
       )}
     </Pressable>

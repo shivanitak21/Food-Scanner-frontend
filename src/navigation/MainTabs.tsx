@@ -34,7 +34,7 @@ export function MainTabs() {
           paddingTop: 4,
         },
         tabBarLabelStyle: {
-          fontFamily: fonts.bodyMedium,
+          ...fonts.bodyMedium,
           fontSize: 11,
         },
         tabBarIconStyle: {
