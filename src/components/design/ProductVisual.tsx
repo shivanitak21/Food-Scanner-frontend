@@ -20,7 +20,7 @@ export function ProductVisual({ name, brand, imageUrl }: { name: string; brand?:
         />
       ) : (
         <View style={[styles.fallback, { height, borderRadius: radius.lg, backgroundColor: colors.ink }]}>
-          <AppText variant="display" color={colors.background} style={styles.initial}>
+          <AppText variant="editorial" color={colors.background} style={styles.initial}>
             {name.slice(0, 1).toUpperCase()}
           </AppText>
         </View>
@@ -30,7 +30,7 @@ export function ProductVisual({ name, brand, imageUrl }: { name: string; brand?:
           {brand}
         </AppText>
       ) : null}
-      <AppText variant="display">{name}</AppText>
+      <AppText variant="editorial">{name}</AppText>
     </View>
   );
 }

@@ -65,7 +65,7 @@ export function HomeScreen({ navigation }: Props) {
       }
     >
       <View style={styles.greeting}>
-        <AppText variant="display">{`${greeting}, ${name}`}</AppText>
+        <AppText variant="editorial">{`${greeting}, ${name}`}</AppText>
         <AppText variant="title" style={styles.headline}>
           Know what's inside.
         </AppText>

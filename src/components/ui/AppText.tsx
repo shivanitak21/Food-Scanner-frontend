@@ -2,17 +2,18 @@ import { Text, type TextProps, type TextStyle } from 'react-native';
 
 import { useTheme } from '@/theme/ThemeProvider';
 
-type Variant = 'display' | 'title' | 'headline' | 'body' | 'bodyMedium' | 'label' | 'caption' | 'numeric';
+type Variant = 'editorial' | 'display' | 'title' | 'headline' | 'body' | 'bodyMedium' | 'label' | 'caption' | 'numeric';
 
 const variantStyle: Record<Variant, TextStyle> = {
-  display: { fontSize: 36, lineHeight: 42, letterSpacing: -0.4 },
-  title: { fontSize: 28, lineHeight: 34, letterSpacing: -0.3 },
-  headline: { fontSize: 17, lineHeight: 22, letterSpacing: -0.2 },
-  body: { fontSize: 16, lineHeight: 22 },
-  bodyMedium: { fontSize: 16, lineHeight: 22 },
-  label: { fontSize: 12, lineHeight: 16, letterSpacing: 0.4, textTransform: 'uppercase' },
-  caption: { fontSize: 13, lineHeight: 18 },
-  numeric: { fontSize: 28, lineHeight: 34, letterSpacing: -0.5 },
+  editorial: { fontSize: 36, lineHeight: 42 },
+  display: { fontSize: 34, lineHeight: 41, letterSpacing: 0.4 },
+  title: { fontSize: 28, lineHeight: 34, letterSpacing: 0.36 },
+  headline: { fontSize: 17, lineHeight: 22, letterSpacing: -0.41 },
+  body: { fontSize: 17, lineHeight: 22, letterSpacing: -0.41 },
+  bodyMedium: { fontSize: 17, lineHeight: 22, letterSpacing: -0.41 },
+  label: { fontSize: 13, lineHeight: 18, letterSpacing: 0.6, textTransform: 'uppercase' },
+  caption: { fontSize: 13, lineHeight: 18, letterSpacing: -0.08 },
+  numeric: { fontSize: 28, lineHeight: 34, letterSpacing: 0.36 },
 };
 
 type Props = TextProps & {
@@ -23,13 +24,15 @@ type Props = TextProps & {
 export function AppText({ variant = 'body', color, style, ...props }: Props) {
   const { colors, fonts } = useTheme();
   const face =
-    variant === 'display' || variant === 'title' || variant === 'numeric'
-      ? fonts.display
-      : variant === 'headline' || variant === 'label'
-        ? fonts.bodySemibold
-        : variant === 'bodyMedium'
-          ? fonts.bodyMedium
-          : fonts.body;
+    variant === 'editorial'
+      ? fonts.editorial
+      : variant === 'display' || variant === 'title' || variant === 'numeric'
+        ? fonts.bodyBold
+        : variant === 'headline' || variant === 'label'
+          ? fonts.bodySemibold
+          : variant === 'bodyMedium'
+            ? fonts.bodyMedium
+            : fonts.body;
 
   return (
     <Text

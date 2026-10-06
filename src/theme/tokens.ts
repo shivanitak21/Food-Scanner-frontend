@@ -1,30 +1,28 @@
-import type { TextStyle } from 'react-native';
+import { Platform, type TextStyle } from 'react-native';
 
 type FontFace = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
-
-const manrope = {
-  regular: 'Manrope_400Regular',
-  medium: 'Manrope_500Medium',
-  semibold: 'Manrope_600SemiBold',
-  bold: 'Manrope_700Bold',
-} as const;
 
 const serif = {
   regular: 'DMSerifDisplay_400Regular',
   italic: 'DMSerifDisplay_400Regular_Italic',
 } as const;
 
-function face(family: string): FontFace {
+function editorial(family: string): FontFace {
   return { fontFamily: family, fontWeight: 'normal' };
 }
 
+function system(weight: TextStyle['fontWeight']): FontFace {
+  if (Platform.OS === 'android') return { fontFamily: 'sans-serif', fontWeight: weight };
+  return { fontWeight: weight };
+}
+
 export const fonts = {
-  display: face(serif.regular),
-  displayItalic: face(serif.italic),
-  body: face(manrope.regular),
-  bodyMedium: face(manrope.medium),
-  bodySemibold: face(manrope.semibold),
-  bodyBold: face(manrope.bold),
+  editorial: editorial(serif.regular),
+  editorialItalic: editorial(serif.italic),
+  body: system('400'),
+  bodyMedium: system('500'),
+  bodySemibold: system('600'),
+  bodyBold: system('700'),
 };
 
 export const iconSize = {

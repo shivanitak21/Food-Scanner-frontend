@@ -13,7 +13,7 @@ export function WhatToKnow({ signal }: { signal: ProductSignal }) {
         What to know
       </AppText>
       {signal.amount ? (
-        <AppText variant="display" style={styles.amount}>
+          <AppText variant="editorial" style={styles.amount}>
           {signal.amount}
         </AppText>
       ) : null}
