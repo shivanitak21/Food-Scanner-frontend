@@ -11,18 +11,28 @@ type Props = {
 };
 
 export function FamilyReview({ members, selectedId, onSelect }: Props) {
-  const { colors } = useTheme();
-  const held = members.filter((member) => member.fit !== 'GOOD_FIT').length;
+  const { colors, radius } = useTheme();
+  const counts = {
+    fit: members.filter((member) => member.fit === 'GOOD_FIT').length,
+    review: members.filter((member) => member.fit === 'REVIEW').length,
+    avoid: members.filter((member) => member.fit === 'DOES_NOT_FIT').length,
+    unknown: members.filter((member) => member.fit === 'INSUFFICIENT_INFORMATION').length,
+  };
+  const total = Math.max(members.length, 1);
 
   return (
     <View style={styles.wrap}>
       <View style={styles.heading}>
-        <AppText variant="label" color={colors.textTertiary}>
-          Family fit
-        </AppText>
+        <AppText variant="title">Profile fit</AppText>
         <AppText variant="caption" color={colors.textSecondary}>
-          {held === 0 ? 'Good fit for everyone' : `${held} to review`}
+          {counts.review + counts.avoid === 0 ? 'Good fit for everyone' : `${counts.review + counts.avoid} to review`}
         </AppText>
+      </View>
+      <View style={[styles.meter, { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill }]}>
+        {counts.fit > 0 ? <View style={{ flex: counts.fit / total, backgroundColor: colors.suitable }} /> : null}
+        {counts.review > 0 ? <View style={{ flex: counts.review / total, backgroundColor: colors.review }} /> : null}
+        {counts.avoid > 0 ? <View style={{ flex: counts.avoid / total, backgroundColor: colors.avoid }} /> : null}
+        {counts.unknown > 0 ? <View style={{ flex: counts.unknown / total, backgroundColor: colors.sage }} /> : null}
       </View>
       {members.map((member) => {
         const selected = member.profileId === selectedId;
@@ -34,19 +44,29 @@ export function FamilyReview({ members, selectedId, onSelect }: Props) {
             accessibilityLabel={`${member.profileName}, ${member.statusLabel}`}
             accessibilityState={{ selected }}
             onPress={() => onSelect(member.profileId)}
-            style={[styles.row, selected && { backgroundColor: colors.surfaceMuted, borderRadius: 16 }]}
+            style={[
+              styles.row,
+              {
+                backgroundColor: selected ? colors.surface : 'transparent',
+                borderColor: selected ? colors.border : 'transparent',
+                borderRadius: radius.lg,
+              },
+            ]}
           >
-            <View style={[styles.avatar, { backgroundColor: colors.cream }]}>
+            <View style={[styles.avatar, { backgroundColor: colors.surfaceMuted }]}>
               <AppText variant="bodyMedium" color={colors.primary}>
                 {member.profileName.slice(0, 1).toUpperCase()}
               </AppText>
             </View>
-            <AppText variant="headline" style={styles.name}>
-              {member.profileName}
-            </AppText>
+            <View style={styles.copy}>
+              <AppText variant="headline">{member.profileName}</AppText>
+              <AppText variant="caption" color={colors.textSecondary} numberOfLines={1}>
+                {member.headline || member.statusLabel}
+              </AppText>
+            </View>
             <View style={styles.status}>
               <View style={[styles.dot, { backgroundColor: colors[tone] }]} />
-              <AppText variant="bodyMedium" color={colors[tone]}>
+              <AppText variant="caption" color={colors[tone]}>
                 {member.statusLabel}
               </AppText>
             </View>
@@ -65,17 +85,20 @@ function fitTone(fit: FitStatus): 'suitable' | 'review' | 'avoid' | 'info' {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 4, marginTop: 8 },
-  heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 },
+  wrap: { gap: 8 },
+  heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  meter: { height: 6, flexDirection: 'row', overflow: 'hidden', marginBottom: 4 },
   row: {
-    minHeight: 64,
-    paddingHorizontal: 8,
+    minHeight: 68,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    borderWidth: 1,
   },
   avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  name: { flex: 1 },
-  status: { flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '46%' },
+  copy: { flex: 1, gap: 2 },
+  status: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '38%' },
   dot: { width: 8, height: 8, borderRadius: 4 },
 });

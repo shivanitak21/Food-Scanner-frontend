@@ -51,6 +51,7 @@ export interface Profile {
   role: ProfileRole;
   ageGroup: AgeGroup | null;
   age: number | null;
+  dateOfBirth: string | null;
   diet: DietPreference;
   dietaryPreferences: string[];
   allergies: string[];
@@ -67,6 +68,7 @@ export interface ProfileInput {
   role: ProfileRole;
   ageGroup: AgeGroup | null;
   age: number | null;
+  dateOfBirth: string | null;
   diet: DietPreference;
   dietaryPreferences: string[];
   allergies: string[];

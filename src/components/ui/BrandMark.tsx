@@ -19,7 +19,7 @@ export function BrandMark({ size = 72, showWordmark = false }: { size?: number; 
           },
         ]}
       >
-        <Ionicons name="leaf" size={size * 0.46} color={colors.onPrimary} />
+        <Ionicons name="scan-outline" size={size * 0.46} color={colors.onPrimary} />
       </View>
       {showWordmark ? (
         <View style={styles.wordmark}>

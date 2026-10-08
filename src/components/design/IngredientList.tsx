@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
@@ -14,14 +15,14 @@ export function IngredientList({
   onPress: (ingredient: IngredientItem) => void;
 }) {
   const { colors } = useTheme();
+  const [open, setOpen] = useState(false);
   if (items.length === 0) return null;
+  const visible = open ? items : items.slice(0, 5);
 
   return (
     <View style={styles.wrap}>
-      <AppText variant="label" color={colors.textTertiary}>
-        Ingredients
-      </AppText>
-      {items.map((item, index) => (
+      <AppText variant="title">Ingredients</AppText>
+      {visible.map((item, index) => (
         <View key={item.id}>
           {index > 0 ? <View style={[styles.rule, { backgroundColor: colors.border }]} /> : null}
           <Pressable
@@ -48,6 +49,18 @@ export function IngredientList({
           </Pressable>
         </View>
       ))}
+      {items.length > 5 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          onPress={() => setOpen((value) => !value)}
+          style={styles.more}
+        >
+          <AppText variant="bodyMedium" color={colors.primary}>
+            {open ? 'Show fewer ingredients' : `Show ${items.length - 5} more`}
+          </AppText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -59,4 +72,5 @@ const styles = StyleSheet.create({
   dot: { width: 7, height: 7, borderRadius: 4 },
   tag: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
   rule: { height: StyleSheet.hairlineWidth },
+  more: { minHeight: 44, justifyContent: 'center' },
 });

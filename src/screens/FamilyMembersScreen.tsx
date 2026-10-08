@@ -69,6 +69,7 @@ export function FamilyMembersScreen({ navigation }: Props) {
 function ProfileRow({ profile, onPress }: { profile: Profile; onPress: () => void }) {
   const { colors } = useTheme();
   const stage = lifeStageLabel(profile.lifeStage) ?? ageGroupLabel(profile.ageGroup) ?? roleLabel(profile.role);
+  const years = profile.age === null ? null : `${profile.age} years`;
   const diet = dietLabel(profile.diet);
   const watch =
     profile.allergies[0]
@@ -80,7 +81,7 @@ function ProfileRow({ profile, onPress }: { profile: Profile; onPress: () => voi
         : diet === 'No specific diet'
           ? profile.dietaryPreferences[0] ?? null
           : diet;
-  const meta = [stage, watch].filter(Boolean).join(' · ');
+  const meta = [stage, years, watch].filter(Boolean).join(' · ');
 
   return (
     <Pressable

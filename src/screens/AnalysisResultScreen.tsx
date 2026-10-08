@@ -8,14 +8,14 @@ import { FamilyReview } from '@/components/design/FamilyReview';
 import { IngredientList } from '@/components/design/IngredientList';
 import { NutritionBlock } from '@/components/design/NutritionBlock';
 import { ProductVisual } from '@/components/design/ProductVisual';
-import { WhatToKnow } from '@/components/design/WhatToKnow';
 import { WhyThisMatters } from '@/components/design/WhyThisMatters';
+import { Appear } from '@/components/motion/Appear';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { EvidenceItem, FamilyMemberSummary, Finding } from '@/types/models';
 import type { RootStackParamList } from '@/types/navigation';
-import { collectFindings, insightCopy, productSignal } from '@/utils/presentation';
+import { collectFindings, insightCopy } from '@/utils/presentation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AnalysisResult'>;
 
@@ -26,6 +26,7 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
   const [profileId, setProfileId] = useState(scan.familySummary[0]?.profileId ?? scan.profiles[0]?.profileId);
   const [sheet, setSheet] = useState<Finding | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const selected = scan.profiles.find((profile) => profile.profileId === profileId) ?? scan.profiles[0] ?? null;
   const member = scan.familySummary.find((item) => item.profileId === profileId) ?? scan.familySummary[0];
   const findings = useMemo(
@@ -35,61 +36,81 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
         : [],
     [selected],
   );
-  const signal = useMemo(() => productSignal(scan), [scan]);
   const focus = findings.map((finding) => finding.nutrient || insightCopy(finding).title);
-  const points = findings.slice(0, 2).map((finding) => {
+  const points = findings.slice(0, 3).map((finding) => {
     const copy = insightCopy(finding);
     return { id: finding.id, title: copy.title, measure: copy.measure, reason: copy.reason };
   });
-  const evidence = selected?.evidence.filter((item) => item.title !== 'Limit of this screen').slice(0, 3) ?? [];
+  const evidence = selected?.evidence.filter((item) => item.title !== 'Limit of this screen').slice(0, 4) ?? [];
   const limitation = selected?.evidence.find((item) => /limit/i.test(item.title));
-
-  const openProfile = (id: string) => {
-    setProfileId(id);
-    setProfileOpen(true);
-  };
 
   return (
     <Screen edges={['top', 'left', 'right']}>
       <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => navigation.goBack()} style={styles.back}>
         <Ionicons name="chevron-back" size={22} color={colors.text} />
       </Pressable>
-      <ProductVisual name={scan.product.name} brand={scan.product.brand} imageUrl={scan.product.imageUrl} />
+      <Appear index={0}>
+        <ProductVisual name={scan.product.name} brand={scan.product.brand} imageUrl={scan.product.imageUrl} />
+      </Appear>
+      <Appear index={1}>
+        <FamilyReview members={scan.familySummary} selectedId={profileId} onSelect={setProfileId} />
+      </Appear>
 
-      <FamilyReview members={scan.familySummary} selectedId={profileId} onSelect={openProfile} />
-
-      {signal ? <WhatToKnow signal={signal} /> : null}
-
-      {member ? (
-        <WhyThisMatters
-          name={member.profileName}
-          points={points}
-          onExplain={findings[0] ? () => setSheet(findings[0]) : undefined}
-        />
-      ) : null}
-
-      <NutritionBlock items={selected?.nutrition.length ? selected.nutrition : scan.product.nutrition} focus={focus} />
-      <IngredientList
-        items={selected?.ingredients.length ? selected.ingredients : scan.product.ingredients}
-        onPress={(ingredient) => navigation.navigate('IngredientDetails', { ingredient, productName: scan.product.name })}
-      />
-
-      {evidence.length > 0 ? (
-        <View style={styles.sources}>
-          <AppText variant="label" color={colors.textTertiary}>
-            Sources
-          </AppText>
-          {evidence.map((item) => (
-            <AppText key={item.id} variant="caption" color={colors.textSecondary}>
-              {[item.title, item.source].filter(Boolean).join(' · ')}
-            </AppText>
-          ))}
+      <Appear key={`${profileId ?? 'profile'}-nutrition`} index={2}>
+        <View style={styles.stack}>
+          {member ? (
+            <Pressable accessibilityRole="button" accessibilityLabel={`${member.profileName} details`} onPress={() => setProfileOpen(true)}>
+              <AppText variant="caption" color={colors.primary}>
+                Profile details
+              </AppText>
+            </Pressable>
+          ) : null}
+          <NutritionBlock items={selected?.nutrition.length ? selected.nutrition : scan.product.nutrition} focus={focus} />
         </View>
+      </Appear>
+      <Appear key={`${profileId ?? 'profile'}-cautions`} index={3}>
+        <Cautions findings={findings} onPress={setSheet} />
+      </Appear>
+      {member ? (
+        <Appear key={`${profileId ?? 'profile'}-why`} index={4}>
+          <WhyThisMatters
+            name={member.profileName}
+            points={points}
+            onExplain={findings[0] ? () => setSheet(findings[0]) : undefined}
+          />
+        </Appear>
       ) : null}
-
-      <AppText variant="caption" color={colors.textTertiary}>
-        Food information for your profiles. Not a medical diagnosis.
-      </AppText>
+      <Appear key={`${profileId ?? 'profile'}-ingredients`} index={5}>
+        <IngredientList
+          items={selected?.ingredients.length ? selected.ingredients : scan.product.ingredients}
+          onPress={(ingredient) => navigation.navigate('IngredientDetails', { ingredient, productName: scan.product.name })}
+        />
+      </Appear>
+      <Appear key={`${profileId ?? 'profile'}-evidence`} index={6}>
+        <View style={styles.stack}>
+          {evidence.length > 0 ? (
+            <View style={styles.sources}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: evidenceOpen }}
+                onPress={() => setEvidenceOpen((value) => !value)}
+                style={styles.sourceHead}
+              >
+                <AppText variant="title">Evidence</AppText>
+                <Ionicons name={evidenceOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textTertiary} />
+              </Pressable>
+              {(evidenceOpen ? evidence : evidence.slice(0, 1)).map((item) => (
+                <AppText key={item.id} variant="caption" color={colors.textSecondary}>
+                  {[item.title, item.source].filter(Boolean).join(' · ')}
+                </AppText>
+              ))}
+            </View>
+          ) : null}
+          <AppText variant="caption" color={colors.textTertiary}>
+            Food information for your profiles. Not a medical diagnosis.
+          </AppText>
+        </View>
+      </Appear>
 
       <DetailSheet
         visible={profileOpen && Boolean(member)}
@@ -114,6 +135,44 @@ export function AnalysisResultScreen({ navigation, route }: Props) {
   );
 }
 
+function Cautions({ findings, onPress }: { findings: Finding[]; onPress: (finding: Finding) => void }) {
+  const { colors, radius } = useTheme();
+  return (
+    <View style={styles.stack}>
+      <AppText variant="title">Cautions</AppText>
+      {findings.length === 0 ? (
+        <AppText variant="body" color={colors.textSecondary}>
+          No cautions for this profile.
+        </AppText>
+      ) : (
+        findings.map((finding) => {
+          const copy = insightCopy(finding);
+          const severe = finding.severity === 'avoid';
+          return (
+            <Pressable
+              key={finding.id}
+              accessibilityRole="button"
+              accessibilityLabel={copy.title}
+              onPress={() => onPress(finding)}
+              style={[styles.caution, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}
+            >
+              <View style={[styles.badge, { backgroundColor: severe ? colors.avoidSoft : colors.reviewSoft }]}>
+                <Ionicons name="warning-outline" size={16} color={severe ? colors.avoid : colors.review} />
+              </View>
+              <View style={styles.copy}>
+                <AppText variant="headline">{copy.title}</AppText>
+                <AppText variant="caption" color={colors.textSecondary} numberOfLines={2}>
+                  {copy.reason}
+                </AppText>
+              </View>
+            </Pressable>
+          );
+        })
+      )}
+    </View>
+  );
+}
+
 function ProfileDetail({
   member,
   findings,
@@ -131,9 +190,6 @@ function ProfileDetail({
       <AppText variant="title">{member.statusLabel}</AppText>
       {findings.length > 0 ? (
         <View style={styles.sheet}>
-          <AppText variant="label" color={colors.textTertiary}>
-            Top concerns
-          </AppText>
           {findings.slice(0, 4).map((finding) => {
             const copy = insightCopy(finding);
             return (
@@ -237,7 +293,12 @@ function FindingDetail({
 
 const styles = StyleSheet.create({
   back: { width: 44, height: 44, justifyContent: 'center' },
+  stack: { gap: 12 },
   sources: { gap: 6 },
+  sourceHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  caution: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderWidth: StyleSheet.hairlineWidth },
+  badge: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  copy: { flex: 1, gap: 2 },
   sheet: { gap: 12 },
   point: { gap: 2 },
 });

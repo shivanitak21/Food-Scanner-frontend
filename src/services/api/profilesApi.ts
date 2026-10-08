@@ -9,6 +9,7 @@ function payload(input: ProfileInput) {
     role: input.role,
     ageGroup: input.ageGroup,
     age: input.age,
+    dateOfBirth: input.dateOfBirth,
     diet: input.diet,
     dietaryPreferences: input.dietaryPreferences,
     allergies: input.allergies,

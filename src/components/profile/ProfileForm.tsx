@@ -19,11 +19,14 @@ import {
 } from '@/constants/profileOptions';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { LifeStage, Profile, ProfileInput, ProfileRole } from '@/types/models';
+import { ageFromDateOfBirth, ageGroupFromAge } from '@/utils/age';
 import { ApiError, getErrorMessage } from '@/utils/errors';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Enter a name').max(60, 'Use 60 characters or fewer'),
   lifeStage: z.enum(['me', 'adult', 'child', 'teen', 'baby', 'pregnancy', 'breastfeeding', 'senior', 'other']),
+  ageMode: z.enum(['dob', 'age']),
+  dateOfBirth: z.string(),
   age: z.string(),
   eating: z.array(z.string()),
   allergies: z.array(z.string()),
@@ -61,10 +64,18 @@ function inferEating(profile?: Profile | null): string[] {
   return [...selected];
 }
 
+function inferAgeMode(profile?: Profile | null): 'dob' | 'age' {
+  if (profile?.dateOfBirth) return 'dob';
+  if (profile?.age !== null && profile?.age !== undefined) return 'age';
+  return 'dob';
+}
+
 function toValues(profile?: Profile | null): FormValues {
   return {
     name: profile?.name ?? '',
     lifeStage: inferStage(profile),
+    ageMode: inferAgeMode(profile),
+    dateOfBirth: profile?.dateOfBirth ?? '',
     age: profile?.age === null || profile?.age === undefined ? '' : String(profile.age),
     eating: inferEating(profile),
     allergies: profile?.allergies ?? [],
@@ -108,6 +119,7 @@ export function ProfileForm({
     reset,
     trigger,
     formState: { errors },
+    watch,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: toValues(initial),
@@ -118,18 +130,35 @@ export function ProfileForm({
   }, [initial, reset]);
 
   const who = WHO_OPTIONS.filter((option) => option.id !== 'me' || allowedRoles.includes('self'));
+  const ageMode = watch('ageMode');
+  const dateOfBirth = watch('dateOfBirth');
+  const calculatedAge = ageMode === 'dob' ? ageFromDateOfBirth(dateOfBirth) : null;
 
   const buildInput = (values: FormValues): ProfileInput | null => {
-    const ageText = values.age.trim();
     let age: number | null = null;
-    if (ageText) {
-      const parsed = Number(ageText);
-      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 120) {
-        setError('age', { message: 'Enter an age from 0 to 120, or leave it blank' });
-        setStep(0);
-        return null;
+    let dateOfBirth: string | null = null;
+    if (values.ageMode === 'dob') {
+      const text = values.dateOfBirth.trim();
+      if (text) {
+        age = ageFromDateOfBirth(text);
+        if (age === null) {
+          setError('dateOfBirth', { message: 'Use a real date as YYYY-MM-DD' });
+          setStep(0);
+          return null;
+        }
+        dateOfBirth = text;
       }
-      age = parsed;
+    } else {
+      const ageText = values.age.trim();
+      if (ageText) {
+        const parsed = Number(ageText);
+        if (!Number.isInteger(parsed) || parsed < 0 || parsed > 120) {
+          setError('age', { message: 'Enter an age from 0 to 120, or leave it blank' });
+          setStep(0);
+          return null;
+        }
+        age = parsed;
+      }
     }
     const stage = WHO_OPTIONS.find((option) => option.id === values.lifeStage) ?? WHO_OPTIONS[1];
     const eating = EATING_OPTIONS.filter((option) => values.eating.includes(option.id));
@@ -144,8 +173,9 @@ export function ProfileForm({
     return {
       name: values.name.trim(),
       role: stage.role,
-      ageGroup: stage.ageGroup,
+      ageGroup: age === null ? stage.ageGroup : ageGroupFromAge(age),
       age,
+      dateOfBirth,
       diet,
       dietaryPreferences,
       allergies: values.allergies,
@@ -175,6 +205,18 @@ export function ProfileForm({
     if (step === 0) {
       const valid = await trigger(['name', 'lifeStage']);
       if (!valid) return;
+      const values = watch();
+      if (values.ageMode === 'dob' && values.dateOfBirth.trim() && ageFromDateOfBirth(values.dateOfBirth) === null) {
+        setError('dateOfBirth', { message: 'Use a real date as YYYY-MM-DD' });
+        return;
+      }
+      if (values.ageMode === 'age' && values.age.trim()) {
+        const parsed = Number(values.age.trim());
+        if (!Number.isInteger(parsed) || parsed < 0 || parsed > 120) {
+          setError('age', { message: 'Enter an age from 0 to 120, or leave it blank' });
+          return;
+        }
+      }
     }
     setStep((value) => Math.min(value + 1, STEPS.length - 1));
   };
@@ -213,11 +255,46 @@ export function ProfileForm({
           />
           <Controller
             control={control}
-            name="age"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextField label="Age, optional" value={value} onBlur={onBlur} onChangeText={onChange} keyboardType="number-pad" error={errors.age?.message} />
+            name="ageMode"
+            render={({ field: { value, onChange } }) => (
+              <View style={styles.wrap}>
+                <Chip label="Date of birth" selected={value === 'dob'} selection="single" onPress={() => onChange('dob')} />
+                <Chip label="Age" selected={value === 'age'} selection="single" onPress={() => onChange('age')} />
+              </View>
             )}
           />
+          {ageMode === 'dob' ? (
+            <Controller
+              control={control}
+              name="dateOfBirth"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField
+                  label="Date of birth"
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="numbers-and-punctuation"
+                  placeholder="YYYY-MM-DD"
+                  error={errors.dateOfBirth?.message}
+                />
+              )}
+            />
+          ) : (
+            <Controller
+              control={control}
+              name="age"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextField label="Age" value={value} onBlur={onBlur} onChangeText={onChange} keyboardType="number-pad" error={errors.age?.message} />
+              )}
+            />
+          )}
+          {calculatedAge !== null ? (
+            <AppText variant="caption" color={colors.textSecondary}>
+              {`Age ${calculatedAge}`}
+            </AppText>
+          ) : null}
         </View>
       ) : null}
 

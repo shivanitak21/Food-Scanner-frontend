@@ -140,13 +140,12 @@ export function HomeScreen({ navigation }: Props) {
 }
 
 function ScanProductCard({ onScan, onBarcode }: { onScan: () => void; onBarcode: () => void }) {
-  const { radius } = useTheme();
+  const { colors, radius } = useTheme();
 
   return (
-    <View style={[styles.scanShadow, { borderRadius: radius.xl }]}>
+    <View style={[styles.scanShadow, { borderRadius: radius.xl, boxShadow: `0 16px 32px ${colors.shadow}` }]}>
       <LinearGradient
-        colors={['#1B3F2E', '#285A43', '#347556']}
-        locations={[0, 0.55, 1]}
+        colors={[colors.heroStart, colors.heroEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.scan, { borderRadius: radius.xl }]}
@@ -163,14 +162,14 @@ function ScanProductCard({ onScan, onBarcode }: { onScan: () => void; onBarcode:
             <FinderCorner edge="bl" />
             <FinderCorner edge="br" />
             <View style={styles.finderIcon}>
-              <Ionicons name="camera-outline" size={26} color="#F7F5F0" />
+              <Ionicons name="camera-outline" size={26} color="#F5F5F7" />
             </View>
           </View>
           <View style={styles.scanCopy}>
-            <AppText variant="title" color="#F7F5F0" style={styles.scanTitle}>
+            <AppText variant="title" color="#F5F5F7" style={styles.scanTitle}>
               Scan a product
             </AppText>
-            <AppText variant="body" color="rgba(247, 245, 240, 0.72)">
+            <AppText variant="body" color="rgba(245, 245, 247, 0.72)">
               Take a photo of the package
             </AppText>
           </View>
@@ -181,11 +180,11 @@ function ScanProductCard({ onScan, onBarcode }: { onScan: () => void; onBarcode:
           onPress={onBarcode}
           style={({ pressed }) => [styles.barcode, pressed && styles.pressed]}
         >
-          <Ionicons name="barcode-outline" size={18} color="rgba(247, 245, 240, 0.82)" />
-          <AppText variant="bodyMedium" color="rgba(247, 245, 240, 0.82)" style={styles.barcodeLabel}>
+          <Ionicons name="barcode-outline" size={18} color="rgba(245, 245, 247, 0.82)" />
+          <AppText variant="bodyMedium" color="rgba(245, 245, 247, 0.82)" style={styles.barcodeLabel}>
             Scan barcode instead
           </AppText>
-          <Ionicons name="chevron-forward" size={16} color="rgba(247, 245, 240, 0.5)" />
+          <Ionicons name="chevron-forward" size={16} color="rgba(245, 245, 247, 0.5)" />
         </Pressable>
       </LinearGradient>
     </View>
@@ -303,9 +302,7 @@ function RecentRow({ scan, onPress }: { scan: ScanSummary; onPress: () => void }
 const styles = StyleSheet.create({
   greeting: { gap: 8, marginBottom: 4 },
   headline: { marginTop: 12 },
-  scanShadow: {
-    boxShadow: '0 18px 36px rgba(27, 63, 46, 0.22)',
-  },
+  scanShadow: {},
   scan: { overflow: 'hidden' },
   scanMain: { paddingTop: 18, paddingHorizontal: 18, paddingBottom: 20 },
   pressed: { opacity: 0.9 },

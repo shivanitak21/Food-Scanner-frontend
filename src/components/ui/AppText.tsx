@@ -5,13 +5,13 @@ import { useTheme } from '@/theme/ThemeProvider';
 type Variant = 'editorial' | 'display' | 'title' | 'headline' | 'body' | 'bodyMedium' | 'label' | 'caption' | 'numeric';
 
 const variantStyle: Record<Variant, TextStyle> = {
-  editorial: { fontSize: 36, lineHeight: 42 },
-  display: { fontSize: 34, lineHeight: 41, letterSpacing: 0.4 },
+  editorial: { fontSize: 34, lineHeight: 41, letterSpacing: -0.6 },
+  display: { fontSize: 34, lineHeight: 41, letterSpacing: 0.37 },
   title: { fontSize: 28, lineHeight: 34, letterSpacing: 0.36 },
   headline: { fontSize: 17, lineHeight: 22, letterSpacing: -0.41 },
   body: { fontSize: 17, lineHeight: 22, letterSpacing: -0.41 },
   bodyMedium: { fontSize: 17, lineHeight: 22, letterSpacing: -0.41 },
-  label: { fontSize: 13, lineHeight: 18, letterSpacing: 0.6, textTransform: 'uppercase' },
+  label: { fontSize: 13, lineHeight: 18, letterSpacing: -0.08 },
   caption: { fontSize: 13, lineHeight: 18, letterSpacing: -0.08 },
   numeric: { fontSize: 28, lineHeight: 34, letterSpacing: 0.36 },
 };

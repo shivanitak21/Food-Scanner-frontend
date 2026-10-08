@@ -26,8 +26,6 @@ function AppShell() {
   const [minTimeDone, setMinTimeDone] = useState(false);
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
-    DMSerifDisplay_400Regular: require('@expo-google-fonts/dm-serif-display/400Regular/DMSerifDisplay_400Regular.ttf'),
-    DMSerifDisplay_400Regular_Italic: require('@expo-google-fonts/dm-serif-display/400Regular_Italic/DMSerifDisplay_400Regular_Italic.ttf'),
   });
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 import { AppText } from '@/components/ui/AppText';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
@@ -32,6 +33,7 @@ export function AnalysisLoader({ subtitle }: { subtitle?: string }) {
           {subtitle}
         </AppText>
       ) : null}
+      <SkeletonRows />
       <View style={styles.list}>
         {steps.map((step, index) => {
           const done = index < active;
@@ -54,10 +56,33 @@ export function AnalysisLoader({ subtitle }: { subtitle?: string }) {
   );
 }
 
+function SkeletonRows() {
+  const { colors, radius } = useTheme();
+  const reduceMotion = useReduceMotion();
+  const opacity = useSharedValue(reduceMotion ? 0.7 : 0.4);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    opacity.value = withRepeat(withTiming(0.9, { duration: 800 }), -1, true);
+  }, [opacity, reduceMotion]);
+
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.View style={[styles.skeleton, style]}>
+      {[0.86, 0.62, 0.74].map((width) => (
+        <View key={width} style={[styles.bone, { width: `${width * 100}%`, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm }]} />
+      ))}
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 14 },
   mark: { width: 72, height: 72, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   center: { textAlign: 'center' },
   list: { alignSelf: 'stretch', gap: 14, marginTop: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  skeleton: { alignSelf: 'stretch', gap: 10, marginTop: 8 },
+  bone: { height: 12 },
 });

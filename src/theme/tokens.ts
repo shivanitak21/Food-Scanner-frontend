@@ -2,23 +2,14 @@ import { Platform, type TextStyle } from 'react-native';
 
 type FontFace = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
 
-const serif = {
-  regular: 'DMSerifDisplay_400Regular',
-  italic: 'DMSerifDisplay_400Regular_Italic',
-} as const;
-
-function editorial(family: string): FontFace {
-  return { fontFamily: family, fontWeight: 'normal' };
-}
-
 function system(weight: TextStyle['fontWeight']): FontFace {
   if (Platform.OS === 'android') return { fontFamily: 'sans-serif', fontWeight: weight };
   return { fontWeight: weight };
 }
 
 export const fonts = {
-  editorial: editorial(serif.regular),
-  editorialItalic: editorial(serif.italic),
+  editorial: system('700'),
+  editorialItalic: system('600'),
   body: system('400'),
   bodyMedium: system('500'),
   bodySemibold: system('600'),
@@ -74,6 +65,8 @@ export type ColorTokens = {
   info: string;
   infoSoft: string;
   danger: string;
+  accent: string;
+  accentSoft: string;
   shadow: string;
   overlay: string;
   inverse: string;
@@ -86,69 +79,73 @@ export type ColorTokens = {
 };
 
 export const lightColors: ColorTokens = {
-  background: '#F7F5F0',
-  surface: '#FFFcf8',
-  surfaceMuted: '#EEE8DC',
-  text: '#171713',
-  textSecondary: '#5C584F',
-  textTertiary: '#8A8478',
-  border: '#E6E0D4',
-  primary: '#285A43',
-  primaryPressed: '#1E4634',
-  onPrimary: '#F7F5F0',
-  primarySoft: '#E5F3EB',
-  honey: '#A67C45',
-  honeySoft: '#F6EFE3',
-  suitable: '#285A43',
-  suitableSoft: '#E5F3EB',
-  review: '#A67C45',
-  reviewSoft: '#F6EFE3',
-  avoid: '#9C4A42',
-  avoidSoft: '#F8EBE8',
-  info: '#3D5C74',
-  infoSoft: '#E8F0F6',
-  danger: '#9C4A42',
-  shadow: 'rgba(23, 23, 19, 0.06)',
-  overlay: 'rgba(23, 23, 19, 0.42)',
-  inverse: '#171713',
-  heroStart: '#F7F5F0',
-  heroEnd: '#E7F3EC',
-  tabBar: '#F7F5F0',
-  sage: '#A9D8BF',
-  cream: '#EEE8DC',
-  ink: '#171713',
+  background: '#F5F5F7',
+  surface: '#FFFFFF',
+  surfaceMuted: '#F2F2F7',
+  text: '#1D1D1F',
+  textSecondary: '#6E6E73',
+  textTertiary: '#8E8E93',
+  border: '#E5E5EA',
+  primary: '#007AFF',
+  primaryPressed: '#0066D6',
+  onPrimary: '#FFFFFF',
+  primarySoft: '#E8F2FF',
+  honey: '#FF9500',
+  honeySoft: '#FFF4E5',
+  suitable: '#007AFF',
+  suitableSoft: '#E8F2FF',
+  review: '#FF9500',
+  reviewSoft: '#FFF4E5',
+  avoid: '#FF3B30',
+  avoidSoft: '#FFEBEA',
+  info: '#007AFF',
+  infoSoft: '#E8F2FF',
+  danger: '#FF3B30',
+  accent: '#AF52DE',
+  accentSoft: '#F6E9FB',
+  shadow: 'rgba(0, 0, 0, 0.06)',
+  overlay: 'rgba(0, 0, 0, 0.4)',
+  inverse: '#1D1D1F',
+  heroStart: '#1D1D1F',
+  heroEnd: '#3A3A3C',
+  tabBar: '#F5F5F7',
+  sage: '#D1D1D6',
+  cream: '#F2F2F7',
+  ink: '#1D1D1F',
 };
 
 export const darkColors: ColorTokens = {
-  background: '#161311',
-  surface: '#221E1A',
-  surfaceMuted: '#2C2722',
-  text: '#F6F1E8',
-  textSecondary: '#C4B8AA',
-  textTertiary: '#8E8376',
-  border: '#3A332C',
-  primary: '#9ED4B6',
-  primaryPressed: '#C5E6D4',
-  onPrimary: '#102117',
-  primarySoft: '#24352C',
-  honey: '#E2B15A',
-  honeySoft: '#3A2E1C',
-  suitable: '#9ED4B6',
-  suitableSoft: '#24352C',
-  review: '#E2B15A',
-  reviewSoft: '#3A2E1C',
-  avoid: '#F0A097',
-  avoidSoft: '#3A2422',
-  info: '#B7D0E4',
-  infoSoft: '#243038',
-  danger: '#F0A097',
-  shadow: 'rgba(0, 0, 0, 0.32)',
+  background: '#1C1C1E',
+  surface: '#2C2C2E',
+  surfaceMuted: '#3A3A3C',
+  text: '#F5F5F7',
+  textSecondary: '#AEAEB2',
+  textTertiary: '#8E8E93',
+  border: '#3A3A3C',
+  primary: '#0A84FF',
+  primaryPressed: '#409CFF',
+  onPrimary: '#FFFFFF',
+  primarySoft: '#1C334D',
+  honey: '#FF9F0A',
+  honeySoft: '#3D2E14',
+  suitable: '#0A84FF',
+  suitableSoft: '#1C334D',
+  review: '#FF9F0A',
+  reviewSoft: '#3D2E14',
+  avoid: '#FF453A',
+  avoidSoft: '#3D1E1C',
+  info: '#64D2FF',
+  infoSoft: '#1A333D',
+  danger: '#FF453A',
+  accent: '#BF5AF2',
+  accentSoft: '#3A2444',
+  shadow: 'rgba(0, 0, 0, 0.4)',
   overlay: 'rgba(0, 0, 0, 0.62)',
-  inverse: '#F6F1E8',
-  heroStart: '#24352C',
-  heroEnd: '#1C2822',
-  tabBar: '#221E1A',
-  sage: '#6E9A84',
-  cream: '#2C2722',
-  ink: '#F6F1E8',
+  inverse: '#F5F5F7',
+  heroStart: '#2C2C2E',
+  heroEnd: '#48484A',
+  tabBar: '#1C1C1E',
+  sage: '#636366',
+  cream: '#3A3A3C',
+  ink: '#F5F5F7',
 };

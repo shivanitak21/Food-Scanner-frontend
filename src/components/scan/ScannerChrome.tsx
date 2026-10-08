@@ -53,9 +53,9 @@ function ModeChip({ label, active, onPress }: { label: string; active: boolean; 
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={[styles.chip, { backgroundColor: active ? '#F7FBF8' : 'rgba(16, 21, 19, 0.45)' }]}
+      style={[styles.chip, { backgroundColor: active ? '#F5F5F7' : 'rgba(28, 28, 30, 0.45)' }]}
     >
-      <AppText variant="caption" color={active ? '#1E4D3A' : '#F7FBF8'} style={styles.chipLabel}>
+      <AppText variant="caption" color={active ? '#1D1D1F' : '#F5F5F7'} style={styles.chipLabel}>
         {label}
       </AppText>
     </Pressable>
@@ -73,7 +73,7 @@ export function CameraIconButton({
 }) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.iconButton}>
-      <Ionicons name={icon} size={22} color="#F7FBF8" />
+      <Ionicons name={icon} size={22} color="#F5F5F7" />
     </Pressable>
   );
 }
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     right: 16,
     height: 2,
     borderRadius: 2,
-    backgroundColor: '#D7F3E4',
+    backgroundColor: 'rgba(245, 245, 247, 0.92)',
   },
   modes: {
     flexDirection: 'row',

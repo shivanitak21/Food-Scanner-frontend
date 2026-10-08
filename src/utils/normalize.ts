@@ -514,6 +514,7 @@ export function normalizeProfile(value: unknown, index = 0): Profile | null {
     role,
     ageGroup: normalizeAgeGroup(pickString(profile, ['ageGroup', 'age_group'])),
     age: pickNumber(profile, ['age']),
+    dateOfBirth: pickString(profile, ['dateOfBirth', 'date_of_birth']) ?? null,
     diet: normalizeDiet(profile),
     dietaryPreferences: stringList(profile.dietaryPreferences ?? profile.dietary_preferences ?? profile.preferences),
     allergies: stringList(profile.allergies),

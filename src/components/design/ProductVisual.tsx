@@ -7,7 +7,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 export function ProductVisual({ name, brand, imageUrl }: { name: string; brand?: string; imageUrl?: string }) {
   const { colors, radius } = useTheme();
   const { width } = useWindowDimensions();
-  const height = Math.min(260, Math.max(168, width * 0.56));
+  const height = Math.min(200, Math.max(148, width * 0.46));
 
   return (
     <View style={styles.wrap}>

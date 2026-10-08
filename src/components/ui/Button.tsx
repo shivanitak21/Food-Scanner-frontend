@@ -34,7 +34,7 @@ export function Button({
     secondary: { background: colors.cream, text: colors.text, border: 'transparent' },
     ghost: { background: 'transparent', text: colors.primary, border: 'transparent' },
     danger: { background: colors.avoidSoft, text: colors.avoid, border: 'transparent' },
-    inverse: { background: '#F7FFF9', text: '#0E3B2A', border: 'transparent' },
+    inverse: { background: colors.surface, text: colors.text, border: colors.border },
   }[variant];
 
   return (
