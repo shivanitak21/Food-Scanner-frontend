@@ -3,17 +3,27 @@ import { Platform, type TextStyle } from 'react-native';
 type FontFace = Pick<TextStyle, 'fontFamily' | 'fontWeight'>;
 
 function system(weight: TextStyle['fontWeight']): FontFace {
-  if (Platform.OS === 'android') return { fontFamily: 'sans-serif', fontWeight: weight };
-  return { fontWeight: weight };
+  if (Platform.OS !== 'android') return { fontWeight: weight };
+
+  const fontFamily =
+    weight === '100' || weight === '200'
+      ? 'sans-serif-thin'
+      : weight === '300'
+        ? 'sans-serif-light'
+        : weight === '500' || weight === '600'
+          ? 'sans-serif-medium'
+          : 'sans-serif';
+
+  return { fontFamily };
 }
 
 export const fonts = {
-  editorial: system('700'),
-  editorialItalic: system('600'),
+  editorial: system('400'),
+  editorialItalic: system('400'),
   body: system('400'),
   bodyMedium: system('500'),
-  bodySemibold: system('600'),
-  bodyBold: system('700'),
+  bodySemibold: system('500'),
+  bodyBold: system('500'),
 };
 
 export const iconSize = {
