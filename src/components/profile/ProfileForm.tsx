@@ -18,7 +18,7 @@ import {
   limitLabel,
 } from '@/constants/profileOptions';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { LifeStage, Profile, ProfileInput, ProfileRole } from '@/types/models';
+import type { LifeStage, Profile, ProfileInput, ProfileRole, ProfileSeed } from '@/types/models';
 import { ageFromDateOfBirth, ageGroupFromAge } from '@/utils/age';
 import { ApiError, getErrorMessage } from '@/utils/errors';
 
@@ -70,7 +70,21 @@ function inferAgeMode(profile?: Profile | null): 'dob' | 'age' {
   return 'dob';
 }
 
-function toValues(profile?: Profile | null): FormValues {
+function toValues(profile?: Profile | null, seed?: ProfileSeed | null): FormValues {
+  if (!profile && seed) {
+    return {
+      name: '',
+      lifeStage: seed.lifeStage ?? 'me',
+      ageMode: seed.dateOfBirth ? 'dob' : seed.age !== null ? 'age' : 'dob',
+      dateOfBirth: seed.dateOfBirth ?? '',
+      age: seed.age === null ? '' : String(seed.age),
+      eating: seed.eating,
+      allergies: seed.allergies,
+      limits: seed.limits,
+      goals: seed.goals.slice(0, 3),
+      notes: seed.notes ?? '',
+    };
+  }
   return {
     name: profile?.name ?? '',
     lifeStage: inferStage(profile),
@@ -93,6 +107,7 @@ type Props = {
   deleting?: boolean;
   onSubmit: (input: ProfileInput) => Promise<void>;
   onDelete?: () => void;
+  seed?: ProfileSeed | null;
   report?: {
     detail: string;
     onPress: (input: ProfileInput) => Promise<void>;
@@ -107,6 +122,7 @@ export function ProfileForm({
   deleting = false,
   onSubmit,
   onDelete,
+  seed,
   report,
 }: Props) {
   const { colors } = useTheme();
@@ -122,12 +138,12 @@ export function ProfileForm({
     watch,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: toValues(initial),
+    defaultValues: toValues(initial, seed),
   });
 
   useEffect(() => {
-    reset(toValues(initial));
-  }, [initial, reset]);
+    reset(toValues(initial, seed));
+  }, [initial, reset, seed]);
 
   const who = WHO_OPTIONS.filter((option) => option.id !== 'me' || allowedRoles.includes('self'));
   const ageMode = watch('ageMode');

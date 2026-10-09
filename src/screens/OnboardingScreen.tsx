@@ -24,13 +24,14 @@ const slides = [
   {
     icon: 'people-outline' as const,
     title: 'Reviewed for your family',
-    message: 'Add each person once. Every product is checked against all of them.',
+    message: 'Add each person when you want a family check. You can scan a product before creating a profile.',
   },
 ];
 
 export function OnboardingScreen() {
   const { colors, radius } = useTheme();
   const completeOnboarding = useSettingsStore((state) => state.completeOnboarding);
+  const enterGuest = useSettingsStore((state) => state.enterGuest);
   const [index, setIndex] = useState(0);
   const slide = slides[index];
   const last = index === slides.length - 1;
@@ -49,6 +50,7 @@ export function OnboardingScreen() {
             <>
               <Button label="Create account" onPress={() => finish('Register')} />
               <Button label="I already have an account" variant="secondary" onPress={() => finish('Login')} />
+              <Button label="Scan without an account" variant="ghost" onPress={enterGuest} />
             </>
           ) : (
             <>

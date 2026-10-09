@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { LoadingState } from '@/components/ui/StateViews';
 import { useProfiles } from '@/hooks/useFoodData';
-import { confirmLabel, previewLabel, type LabelDraft } from '@/services/api/scansApi';
+import { confirmLabel, confirmQuickLabel, previewLabel, type LabelDraft } from '@/services/api/scansApi';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { RootStackParamList } from '@/types/navigation';
 import { ApiError, getErrorMessage } from '@/utils/errors';
@@ -106,10 +106,6 @@ export function LabelCameraScreen({ navigation, route }: Props) {
       .map((id) => nextPhotos[id])
       .filter((uri): uri is string => Boolean(uri));
     if (uris.length === 0) return;
-    if ((profiles.data ?? []).length === 0) {
-      navigation.navigate('FamilyMemberForm', {});
-      return;
-    }
     setPhase('reading');
     setFailure(null);
     scanEvent('ocr_started');
@@ -144,7 +140,7 @@ export function LabelCameraScreen({ navigation, route }: Props) {
     setPhase('analyzing');
     scanEvent('analysis_started');
     try {
-      const scan = await confirmLabel({
+      const payload = {
         productName: productName.trim(),
         brand: draft.brand,
         variant: draft.variant,
@@ -156,9 +152,16 @@ export function LabelCameraScreen({ navigation, route }: Props) {
         mayContain: draft.mayContain,
         nutrition: draft.nutrition,
         imageUri: photos.front ?? photos.ingredients ?? photos.nutrition,
-      });
-      scanEvent('analysis_success');
-      navigation.replace('AnalysisResult', { scan });
+      };
+      if ((profiles.data ?? []).length > 0) {
+        const scan = await confirmLabel(payload);
+        scanEvent('analysis_success');
+        navigation.replace('AnalysisResult', { scan });
+      } else {
+        const quick = await confirmQuickLabel(payload);
+        scanEvent('analysis_success');
+        navigation.replace('AnalysisResult', { quick });
+      }
     } catch (error) {
       scanEvent('analysis_failed');
       setFailure(getErrorMessage(error));

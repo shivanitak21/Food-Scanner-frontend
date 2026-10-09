@@ -12,6 +12,7 @@ import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/StateViews';
 import { useProfiles, useScanMutations } from '@/hooks/useFoodData';
+import { quickScanBarcode } from '@/services/api/scansApi';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { RootStackParamList } from '@/types/navigation';
 import { ApiError } from '@/utils/errors';
@@ -88,11 +89,25 @@ export function BarcodeScannerScreen({ navigation }: Props) {
     );
   }
 
-  const lookup = (code: string) => {
-    if ((profiles.data ?? []).length === 0) {
-      navigation.navigate('FamilyMemberForm', {});
+  const finishError = (error: unknown) => {
+    void warningHaptic();
+    setAnalyzing(false);
+    if (error instanceof ApiError && error.isNetwork) {
+      scanEvent('barcode_lookup_failed');
+      setFailure('network');
       return;
     }
+    if (error instanceof ApiError && (error.code === 'PRODUCT_NOT_FOUND' || error.status === 404)) {
+      scanEvent('barcode_lookup_not_found');
+      setFailure('product');
+      return;
+    }
+    scanEvent('barcode_lookup_failed');
+    setFailure('lookup');
+  };
+
+  const lookup = (code: string) => {
+    const family = (profiles.data ?? []).length > 0;
     locked.current = true;
     setFoundCode(code);
     setStatusLine('Looking up product...');
@@ -100,31 +115,27 @@ export function BarcodeScannerScreen({ navigation }: Props) {
     setFailure(null);
     scanEvent('barcode_lookup_started');
     void successHaptic();
-    barcode.mutate(
-      { barcode: code },
-      {
-        onSuccess: (scan) => {
-          scanEvent('barcode_lookup_success');
-          scanEvent('analysis_success');
-          navigation.replace('AnalysisResult', { scan });
+    if (family) {
+      barcode.mutate(
+        { barcode: code },
+        {
+          onSuccess: (scan) => {
+            scanEvent('barcode_lookup_success');
+            scanEvent('analysis_success');
+            navigation.replace('AnalysisResult', { scan });
+          },
+          onError: finishError,
         },
-        onError: (error) => {
-          void warningHaptic();
-          setAnalyzing(false);
-          if (error instanceof ApiError && error.isNetwork) {
-            scanEvent('barcode_lookup_failed');
-            setFailure('network');
-            return;
-          }
-          if (error instanceof ApiError && (error.code === 'PRODUCT_NOT_FOUND' || error.status === 404)) {
-            scanEvent('barcode_lookup_not_found');
-            setFailure('product');
-            return;
-          }
-          scanEvent('barcode_lookup_failed');
-          setFailure('lookup');
-        },
+      );
+      return;
+    }
+    void quickScanBarcode({ barcode: code }).then(
+      (quick) => {
+        scanEvent('barcode_lookup_success');
+        scanEvent('analysis_success');
+        navigation.replace('AnalysisResult', { quick });
       },
+      finishError,
     );
   };
 

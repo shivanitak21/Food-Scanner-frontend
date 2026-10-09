@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { QuickFoodCheck } from '@/components/analysis/QuickFoodCheck';
 import { DetailSheet } from '@/components/design/DetailSheet';
 import { FamilyReview } from '@/components/design/FamilyReview';
 import { IngredientList } from '@/components/design/IngredientList';
@@ -13,16 +14,41 @@ import { Appear } from '@/components/motion/Appear';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { EvidenceItem, FamilyMemberSummary, Finding } from '@/types/models';
+import type { EvidenceItem, FamilyMemberSummary, FamilyScan, Finding } from '@/types/models';
 import type { RootStackParamList } from '@/types/navigation';
 import { collectFindings, insightCopy } from '@/utils/presentation';
+import { beginProfile } from '@/utils/profileEntry';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AnalysisResult'>;
 
 export function AnalysisResultScreen({ navigation, route }: Props) {
+  const quick = route.params.quick;
+  if (quick) {
+    return (
+      <Screen edges={['top', 'left', 'right']}>
+        <QuickFoodCheck
+          scan={quick}
+          onBack={() => navigation.goBack()}
+          onIngredient={(ingredient) => navigation.navigate('IngredientDetails', { ingredient, productName: quick.product.name })}
+          onContext={() =>
+            navigation.navigate('QuickContext', {
+              productId: quick.productId,
+              scanType: quick.scanType,
+              context: quick.context,
+            })
+          }
+          onCreateProfile={() => beginProfile(navigation, quick.profileDraft)}
+        />
+      </Screen>
+    );
+  }
+  if (!route.params.scan) return null;
+  return <FamilyAnalysis navigation={navigation} scan={route.params.scan} />;
+}
+
+function FamilyAnalysis({ navigation, scan }: { navigation: Props['navigation']; scan: FamilyScan }) {
   const { colors } = useTheme();
   const { height } = useWindowDimensions();
-  const scan = route.params.scan;
   const [profileId, setProfileId] = useState(scan.familySummary[0]?.profileId ?? scan.profiles[0]?.profileId);
   const [sheet, setSheet] = useState<Finding | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);

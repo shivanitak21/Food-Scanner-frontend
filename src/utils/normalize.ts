@@ -18,6 +18,12 @@ import type {
   NutritionItem,
   Product,
   Profile,
+  ProfileSeed,
+  QuickCaution,
+  QuickContext,
+  QuickHighlight,
+  QuickOverall,
+  QuickScan,
   ProfileRole,
   ScanSummary,
   User,
@@ -450,6 +456,135 @@ function wrapSingleAnalysis(analysis: AnalysisResult): FamilyScan {
     familySummary: [memberFromAnalysis(analysis)],
     profiles: [analysis],
     missingInformation: [],
+  };
+}
+
+const OVERALLS: QuickOverall[] = ['good', 'review', 'limit', 'insufficient'];
+const HEALTHS = ['diabetes', 'high_blood_pressure', 'high_cholesterol', 'other'] as const;
+
+export function normalizeQuickScan(value: unknown, hint?: { scanType?: 'barcode' | 'label' }): QuickScan {
+  const record = asRecord(unwrapData(value)) ?? {};
+  const product = normalizeProduct(record.product, pickString(record, ['productName', 'product_name']));
+  const contextRecord = asRecord(record.context) ?? {};
+  const draftRecord = asRecord(record.profileDraft ?? record.profile_draft) ?? {};
+  const overallText = pickString(record, ['overall']) ?? 'review';
+  const overall = OVERALLS.includes(overallText as QuickOverall) ? (overallText as QuickOverall) : 'review';
+  const ingredients = pickArray(record, ['ingredients']).length
+    ? pickArray(record, ['ingredients'])
+        .map((item, index) => normalizeIngredient(item, index))
+        .filter((item): item is IngredientItem => item !== null)
+    : product.ingredients;
+
+  return {
+    scope: 'quick',
+    id: pickString(record, ['id']) ?? `quick-${product.id || 'scan'}`,
+    productId: pickString(record, ['productId', 'product_id']) ?? product.id,
+    createdAt: pickString(record, ['createdAt', 'created_at']) ?? new Date().toISOString(),
+    scanType: normalizeScanType(pickString(record, ['scanType', 'scan_type']), hint?.scanType ?? 'barcode'),
+    disclaimer: pickString(record, ['disclaimer']) ?? DISCLAIMER,
+    product: { ...product, ingredients },
+    overall,
+    overallLabel: pickString(record, ['overallLabel', 'overall_label']) ?? 'Review',
+    overallDetail: pickString(record, ['overallDetail', 'overall_detail']) ?? '',
+    highlights: pickArray(record, ['highlights'])
+      .map((item, index) => normalizeHighlight(item, index))
+      .filter((item): item is QuickHighlight => item !== null),
+    whatToKnow: stringList(record.whatToKnow ?? record.what_to_know),
+    notableIngredients: pickArray(record, ['notableIngredients', 'notable_ingredients'])
+      .map((item) => {
+        const row = asRecord(item);
+        if (!row) return null;
+        const name = pickString(row, ['name']);
+        const note = pickString(row, ['note']);
+        if (!name || !note) return null;
+        return { name, note };
+      })
+      .filter((item): item is { name: string; note: string } => item !== null),
+    whoMayWantToCheck: stringList(record.whoMayWantToCheck ?? record.who_may_want_to_check),
+    whoEmpty: pickString(record, ['whoEmpty', 'who_empty']) ?? '',
+    contextNotes: stringList(record.contextNotes ?? record.context_notes),
+    professionalNote: pickString(record, ['professionalNote', 'professional_note']) ?? null,
+    cautions: pickArray(record, ['cautions'])
+      .map((item, index) => normalizeCaution(item, index))
+      .filter((item): item is QuickCaution => item !== null),
+    ingredients,
+    context: normalizeQuickContext(contextRecord),
+    profileDraft: normalizeProfileSeed(draftRecord, normalizeQuickContext(contextRecord)),
+  };
+}
+
+function normalizeQuickContext(record: Record<string, unknown>): QuickContext {
+  const diet = normalizeDiet(record);
+  return {
+    age: pickNumber(record, ['age']),
+    dateOfBirth: pickString(record, ['dateOfBirth', 'date_of_birth']) ?? null,
+    diet,
+    dietaryPreferences: stringList(record.dietaryPreferences ?? record.dietary_preferences),
+    allergies: stringList(record.allergies),
+    healthConditions: stringList(record.healthConditions ?? record.health_conditions).filter(
+      (item): item is QuickContext['healthConditions'][number] => HEALTHS.includes(item as (typeof HEALTHS)[number]),
+    ),
+    goals: stringList(record.goals),
+    thingsToWatch: stringList(record.thingsToWatch ?? record.things_to_watch),
+    eating: stringList(record.eating),
+    hasContext: pickBool(record, ['hasContext', 'has_context']) ?? false,
+  };
+}
+
+function normalizeProfileSeed(record: Record<string, unknown>, context: QuickContext): ProfileSeed {
+  const stage = pickString(record, ['lifeStage', 'life_stage']);
+  const lifeStage = stage && LIFE_STAGES.includes(stage as LifeStage) ? (stage as LifeStage) : null;
+  return {
+    dateOfBirth: pickString(record, ['dateOfBirth', 'date_of_birth']) ?? context.dateOfBirth,
+    age: pickNumber(record, ['age']) ?? context.age,
+    diet: normalizeDiet(record),
+    dietaryPreferences: stringList(record.dietaryPreferences ?? record.dietary_preferences),
+    allergies: stringList(record.allergies),
+    limits: stringList(record.limits),
+    goals: stringList(record.goals).slice(0, 3),
+    notes: pickString(record, ['notes']) ?? null,
+    lifeStage,
+    eating: stringList(record.eating).length ? stringList(record.eating) : context.eating,
+  };
+}
+
+function normalizeHighlight(value: unknown, index: number): QuickHighlight | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const name = pickString(record, ['name']);
+  if (!name) return null;
+  const levelText = pickString(record, ['level']) ?? 'unknown';
+  const level = ['low', 'moderate', 'high', 'unknown'].includes(levelText)
+    ? (levelText as QuickHighlight['level'])
+    : 'unknown';
+  const toneText = pickString(record, ['tone']) ?? 'neutral';
+  const tone = ['positive', 'attention', 'concern', 'neutral'].includes(toneText)
+    ? (toneText as QuickHighlight['tone'])
+    : 'neutral';
+  const bar = pickNumber(record, ['bar']) ?? 0;
+  return {
+    id: pickString(record, ['id']) ?? `highlight-${index}`,
+    name,
+    amount: pickString(record, ['amount']) ?? null,
+    unit: pickString(record, ['unit']) ?? '',
+    basis: pickString(record, ['basis']) ?? null,
+    level,
+    levelLabel: pickString(record, ['levelLabel', 'level_label']) ?? level,
+    bar: Math.max(0, Math.min(100, bar)),
+    tone,
+    emphasized: pickBool(record, ['emphasized']) ?? false,
+  };
+}
+
+function normalizeCaution(value: unknown, index: number): QuickCaution | null {
+  const record = asRecord(value);
+  if (!record) return null;
+  const title = pickString(record, ['title']);
+  if (!title) return null;
+  return {
+    id: pickString(record, ['id']) ?? `caution-${index}`,
+    title,
+    detail: pickString(record, ['detail', 'reason']) ?? '',
   };
 }
 

@@ -12,6 +12,7 @@ import { IngredientDetailsScreen } from '@/screens/IngredientDetailsScreen';
 import { LabelCameraScreen } from '@/screens/LabelCameraScreen';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { ProductDetailsScreen } from '@/screens/ProductDetailsScreen';
+import { QuickContextScreen } from '@/screens/QuickContextScreen';
 import { UserProfileScreen } from '@/screens/UserProfileScreen';
 import { useAuthStore } from '@/state/authStore';
 import { useSettingsStore } from '@/state/settingsStore';
@@ -24,6 +25,7 @@ export function RootNavigator() {
   const { colors, fonts, mode } = useTheme();
   const status = useAuthStore((state) => state.status);
   const hasCompletedOnboarding = useSettingsStore((state) => state.hasCompletedOnboarding);
+  const guestMode = useSettingsStore((state) => state.guestMode);
 
   const navigationTheme = {
     ...(mode === 'dark' ? DarkTheme : DefaultTheme),
@@ -42,7 +44,7 @@ export function RootNavigator() {
     return <OnboardingScreen />;
   }
 
-  if (status !== 'authenticated') {
+  if (status !== 'authenticated' && !guestMode) {
     return (
       <NavigationContainer theme={navigationTheme}>
         <AuthNavigator />
@@ -66,6 +68,7 @@ export function RootNavigator() {
         <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="LabelCamera" component={LabelCameraScreen} options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="AnalysisResult" component={AnalysisResultScreen} options={{ headerShown: false, animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="QuickContext" component={QuickContextScreen} options={{ title: 'Make it more relevant' }} />
         <Stack.Screen name="Compare" component={CompareScreen} options={{ title: 'Compare' }} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ title: '' }} />
         <Stack.Screen

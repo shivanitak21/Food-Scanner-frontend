@@ -105,6 +105,7 @@ export function FamilyMemberFormScreen({ navigation, route }: Props) {
     <Screen edges={['left', 'right', 'bottom']} keyboardOffset={88}>
       <ProfileForm
         initial={existing}
+        seed={profileId ? null : route.params.seed}
         allowedRoles={existing ? Array.from(new Set([existing.role, ...allowedRoles])) : allowedRoles}
         submitLabel={existing ? 'Save changes' : 'Add profile'}
         submitting={create.isPending || update.isPending}

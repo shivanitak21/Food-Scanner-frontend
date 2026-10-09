@@ -8,10 +8,12 @@ import { Screen } from '@/components/ui/Screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/StateViews';
 import { ageGroupLabel, allergyLabel, dietLabel, lifeStageLabel, limitLabel, roleLabel } from '@/constants/profileOptions';
 import { useSelectedProfile } from '@/hooks/useSelectedProfile';
+import { useAuthStore } from '@/state/authStore';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { Profile } from '@/types/models';
 import type { MainTabParamList, RootStackParamList } from '@/types/navigation';
 import { getErrorMessage } from '@/utils/errors';
+import { beginProfile } from '@/utils/profileEntry';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Family'>,
@@ -20,7 +22,12 @@ type Props = CompositeScreenProps<
 
 export function FamilyMembersScreen({ navigation }: Props) {
   const { colors } = useTheme();
+  const status = useAuthStore((state) => state.status);
   const { profiles, isLoading, isRefetching, isError, error, refetch } = useSelectedProfile();
+  const addPerson = () => {
+    if (status === 'authenticated') navigation.navigate('FamilyMemberForm', {});
+    else beginProfile(navigation);
+  };
 
   return (
     <Screen
@@ -38,9 +45,9 @@ export function FamilyMembersScreen({ navigation }: Props) {
         <EmptyState
           icon="people-outline"
           title="Add your family"
-          message="Add your family to see who each product fits."
+          message="You can scan without a profile. Add people when you want each product checked for them."
           actionLabel="Add family member"
-          onAction={() => navigation.navigate('FamilyMemberForm', {})}
+          onAction={addPerson}
         />
       ) : null}
       {profiles.map((profile) => (
@@ -54,7 +61,7 @@ export function FamilyMembersScreen({ navigation }: Props) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add family member"
-          onPress={() => navigation.navigate('FamilyMemberForm', {})}
+          onPress={addPerson}
           style={styles.add}
         >
           <AppText variant="headline" color={colors.primary}>

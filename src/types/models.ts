@@ -190,3 +190,88 @@ export interface AuthSession {
   token: string;
   user: User;
 }
+
+export type QuickOverall = 'good' | 'review' | 'limit' | 'insufficient';
+
+export type HealthConsideration = 'diabetes' | 'high_blood_pressure' | 'high_cholesterol' | 'other';
+
+export interface QuickContext {
+  age: number | null;
+  dateOfBirth: string | null;
+  diet: DietPreference;
+  dietaryPreferences: string[];
+  allergies: string[];
+  healthConditions: HealthConsideration[];
+  goals: string[];
+  thingsToWatch: string[];
+  eating: string[];
+  hasContext: boolean;
+}
+
+export interface ProfileSeed {
+  dateOfBirth: string | null;
+  age: number | null;
+  diet: DietPreference;
+  dietaryPreferences: string[];
+  allergies: string[];
+  limits: string[];
+  goals: string[];
+  notes: string | null;
+  lifeStage: LifeStage | null;
+  eating: string[];
+}
+
+export interface QuickHighlight {
+  id: string;
+  name: string;
+  amount: string | null;
+  unit: string;
+  basis: string | null;
+  level: 'low' | 'moderate' | 'high' | 'unknown';
+  levelLabel: string;
+  bar: number;
+  tone: 'positive' | 'attention' | 'concern' | 'neutral';
+  emphasized: boolean;
+}
+
+export interface QuickCaution {
+  id: string;
+  title: string;
+  detail: string;
+}
+
+export interface QuickScan {
+  scope: 'quick';
+  id: string;
+  productId: string;
+  createdAt: string;
+  scanType: 'barcode' | 'label';
+  disclaimer: string;
+  product: Product;
+  overall: QuickOverall;
+  overallLabel: string;
+  overallDetail: string;
+  highlights: QuickHighlight[];
+  whatToKnow: string[];
+  notableIngredients: Array<{ name: string; note: string }>;
+  whoMayWantToCheck: string[];
+  whoEmpty: string;
+  contextNotes: string[];
+  professionalNote: string | null;
+  cautions: QuickCaution[];
+  ingredients: IngredientItem[];
+  context: QuickContext;
+  profileDraft: ProfileSeed;
+}
+
+export interface QuickContextInput {
+  age?: number | null;
+  dateOfBirth?: string | null;
+  diet?: DietPreference;
+  dietaryPreferences?: string[];
+  allergies?: string[];
+  healthConditions?: HealthConsideration[];
+  goals?: string[];
+  thingsToWatch?: string[];
+  eating?: string[];
+}

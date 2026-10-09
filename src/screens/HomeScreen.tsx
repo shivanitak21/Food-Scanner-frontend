@@ -4,6 +4,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect } from 'react';
 import { Alert, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
@@ -12,12 +13,14 @@ import { Screen } from '@/components/ui/Screen';
 import { EmptyState, ErrorState } from '@/components/ui/StateViews';
 import { useCurrentUser, useProfiles, useScanHistory } from '@/hooks/useFoodData';
 import { useAuthStore } from '@/state/authStore';
+import { useQuickDraftStore } from '@/state/quickDraftStore';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { Profile, ScanSummary } from '@/types/models';
 import type { MainTabParamList, RootStackParamList } from '@/types/navigation';
 import { getErrorMessage } from '@/utils/errors';
 import { firstName, greetingForHour } from '@/utils/format';
 import { tapHaptic } from '@/utils/haptics';
+import { beginProfile } from '@/utils/profileEntry';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Home'>,
@@ -26,7 +29,9 @@ type Props = CompositeScreenProps<
 
 export function HomeScreen({ navigation }: Props) {
   const { colors, radius } = useTheme();
+  const status = useAuthStore((state) => state.status);
   const offline = useAuthStore((state) => state.offline);
+  const pendingProfile = useQuickDraftStore((state) => state.pending);
   const userQuery = useCurrentUser();
   const profiles = useProfiles();
   const history = useScanHistory();
@@ -35,19 +40,23 @@ export function HomeScreen({ navigation }: Props) {
   const name = firstName(userQuery.data?.name);
   const greeting = greetingForHour(new Date().getHours());
 
+  useEffect(() => {
+    if (status !== 'authenticated' || !pendingProfile) return;
+    const seed = useQuickDraftStore.getState().take();
+    if (seed) navigation.navigate('FamilyMemberForm', { seed });
+  }, [navigation, pendingProfile, status]);
+
   const openScan = (mode: 'barcode' | 'label') => {
-    if (profiles.isLoading) {
+    if (status === 'authenticated' && profiles.isLoading) {
       Alert.alert('Family is still loading', 'Try the scan again in a moment.');
       return;
     }
-    if (people.length === 0) {
-      Alert.alert('Add your family first', 'A scan is reviewed for every profile on the account.', [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Add person', onPress: () => navigation.navigate('FamilyMemberForm', {}) },
-      ]);
-      return;
-    }
     navigation.navigate(mode === 'barcode' ? 'BarcodeScanner' : 'LabelCamera');
+  };
+
+  const addPerson = () => {
+    if (status === 'authenticated') navigation.navigate('FamilyMemberForm', {});
+    else beginProfile(navigation);
   };
 
   return (
@@ -102,9 +111,9 @@ export function HomeScreen({ navigation }: Props) {
           <EmptyState
             icon="people-outline"
             title="Add your family"
-            message="Add your family to see who each product fits."
+            message="You can scan without a profile. Add people when you want each product checked for them."
             actionLabel="Add family member"
-            onAction={() => navigation.navigate('FamilyMemberForm', {})}
+            onAction={addPerson}
           />
         )}
       </View>
@@ -127,7 +136,7 @@ export function HomeScreen({ navigation }: Props) {
         <EmptyState
           icon="scan-outline"
           title="Your food history starts here."
-          message="A product you scan will show who it fits."
+          message={people.length > 0 ? 'A product you scan will show who it fits.' : 'A scan works before you create a profile.'}
           actionLabel="Scan a product"
           onAction={() => openScan('label')}
         />

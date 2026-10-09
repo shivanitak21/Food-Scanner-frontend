@@ -1,5 +1,5 @@
 import { api } from '@/services/api/client';
-import type { FamilyScan, ScanSummary } from '@/types/models';
+import type { FamilyScan, QuickContextInput, QuickScan, ScanSummary } from '@/types/models';
 
 export interface LabelDraft {
   productName: string;
@@ -22,7 +22,7 @@ export interface LabelDraft {
   confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'NEEDS_CONFIRMATION';
   verificationStatus: 'NEEDS_REVIEW';
 }
-import { normalizeFamilyScan, normalizeHistory } from '@/utils/normalize';
+import { normalizeFamilyScan, normalizeHistory, normalizeQuickScan } from '@/utils/normalize';
 
 export async function scanBarcode(input: { barcode: string }): Promise<FamilyScan> {
   const response = await api.post('/api/scans/barcode', { barcode: input.barcode }, { timeout: 60000 });
@@ -127,6 +127,51 @@ export async function confirmLabel(input: {
   }
   const response = await api.post('/api/scans/label/confirm', form, { timeout: 60000 });
   return normalizeFamilyScan(response.data, { scanType: 'label' });
+}
+
+export async function quickScanBarcode(input: { barcode: string; context?: QuickContextInput }): Promise<QuickScan> {
+  const response = await api.post('/api/scans/quick/barcode', input, { timeout: 60000 });
+  return normalizeQuickScan(response.data, { scanType: 'barcode' });
+}
+
+export async function confirmQuickLabel(input: {
+  productName: string;
+  brand?: string;
+  variant?: string;
+  category?: string;
+  claims?: string[];
+  barcode?: string;
+  ingredientsText: string;
+  contains: string[];
+  mayContain: string[];
+  nutrition: Array<{ name: string; amount: string; unit?: string }>;
+  imageUri?: string;
+  context?: QuickContextInput;
+}): Promise<QuickScan> {
+  const form = new FormData();
+  form.append('productName', input.productName);
+  if (input.brand) form.append('brand', input.brand);
+  if (input.variant) form.append('variant', input.variant);
+  if (input.category) form.append('category', input.category);
+  if (input.barcode) form.append('barcode', input.barcode);
+  form.append('ingredientsText', input.ingredientsText);
+  form.append('claims', JSON.stringify(input.claims ?? []));
+  form.append('contains', JSON.stringify(input.contains));
+  form.append('mayContain', JSON.stringify(input.mayContain));
+  form.append('nutrition', JSON.stringify(input.nutrition));
+  if (input.context) form.append('context', JSON.stringify(input.context));
+  if (input.imageUri) form.append('image', packageFile(input.imageUri, 'package.jpg'));
+  const response = await api.post('/api/scans/quick/label/confirm', form, { timeout: 60000 });
+  return normalizeQuickScan(response.data, { scanType: 'label' });
+}
+
+export async function refineQuickScan(input: {
+  productId: string;
+  scanType: 'barcode' | 'label';
+  context?: QuickContextInput;
+}): Promise<QuickScan> {
+  const response = await api.post('/api/scans/quick/refine', input, { timeout: 60000 });
+  return normalizeQuickScan(response.data, { scanType: input.scanType });
 }
 
 export async function fetchScanHistory(): Promise<ScanSummary[]> {

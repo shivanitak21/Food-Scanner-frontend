@@ -12,6 +12,7 @@ import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
 import { login } from '@/services/api/authApi';
 import { useAuthStore } from '@/state/authStore';
+import { useSettingsStore } from '@/state/settingsStore';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { AuthStackParamList } from '@/types/navigation';
 import { ApiError, getErrorMessage } from '@/utils/errors';
@@ -27,6 +28,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export function LoginScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const setSession = useAuthStore((state) => state.setSession);
+  const enterGuest = useSettingsStore((state) => state.enterGuest);
+  const exitGuest = useSettingsStore((state) => state.exitGuest);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const {
@@ -45,6 +48,7 @@ export function LoginScreen({ navigation }: Props) {
     try {
       const session = await login(values);
       await setSession(session.user, session.token);
+      exitGuest();
     } catch (error) {
       if (error instanceof ApiError && error.fieldErrors) {
         if (error.fieldErrors.email) setError('email', { message: error.fieldErrors.email });
@@ -109,6 +113,11 @@ export function LoginScreen({ navigation }: Props) {
       <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Register')} style={styles.link}>
         <AppText variant="bodyMedium" color={colors.primary}>
           Create an account
+        </AppText>
+      </Pressable>
+      <Pressable accessibilityRole="button" onPress={enterGuest} style={styles.link}>
+        <AppText variant="bodyMedium" color={colors.textSecondary}>
+          Scan without an account
         </AppText>
       </Pressable>
     </Screen>

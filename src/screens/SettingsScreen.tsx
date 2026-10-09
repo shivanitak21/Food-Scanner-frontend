@@ -12,6 +12,7 @@ import { DISCLAIMER } from '@/constants/copy';
 import { queryClient } from '@/lib/queryClient';
 import { useCurrentUser } from '@/hooks/useFoodData';
 import { useAuthStore } from '@/state/authStore';
+import { authIntent } from '@/state/authIntent';
 import { useSettingsStore, type ThemePreference } from '@/state/settingsStore';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { MainTabParamList, RootStackParamList } from '@/types/navigation';
@@ -32,8 +33,11 @@ export function SettingsScreen({ navigation }: Props) {
   const theme = useSettingsStore((state) => state.theme);
   const setTheme = useSettingsStore((state) => state.setTheme);
   const resetOnboarding = useSettingsStore((state) => state.resetOnboarding);
+  const status = useAuthStore((state) => state.status);
   const signOut = useAuthStore((state) => state.signOut);
+  const exitGuest = useSettingsStore((state) => state.exitGuest);
   const user = useCurrentUser();
+  const signedIn = status === 'authenticated';
   const [privacy, setPrivacy] = useState(false);
   const [about, setAbout] = useState(false);
 
@@ -41,7 +45,17 @@ export function SettingsScreen({ navigation }: Props) {
     <Screen>
       <AppText variant="display">Settings</AppText>
       <View>
-        <Row title="Account" detail={user.data?.email || user.data?.name || 'Signed in'} onPress={() => navigation.navigate('UserProfile')} />
+        <Row
+          title="Account"
+          detail={signedIn ? user.data?.email || user.data?.name || 'Signed in' : 'Optional'}
+          onPress={() => {
+            if (signedIn) navigation.navigate('UserProfile');
+            else {
+              authIntent.set('Register');
+              exitGuest();
+            }
+          }}
+        />
         <Row title="Family" detail="People included in every scan" onPress={() => navigation.navigate('Family')} />
         <View style={styles.block}>
           <AppText variant="headline">Preferences</AppText>
@@ -71,15 +85,21 @@ export function SettingsScreen({ navigation }: Props) {
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Sign out"
+        accessibilityLabel={signedIn ? 'Sign out' : 'Sign in'}
         onPress={() => {
           queryClient.clear();
-          signOut();
+          if (signedIn) {
+            exitGuest();
+            void signOut();
+            return;
+          }
+          authIntent.set('Login');
+          exitGuest();
         }}
         style={styles.signOut}
       >
-        <AppText variant="bodyMedium" color={colors.avoid}>
-          Sign out
+        <AppText variant="bodyMedium" color={signedIn ? colors.avoid : colors.primary}>
+          {signedIn ? 'Sign out' : 'Sign in'}
         </AppText>
       </Pressable>
 

@@ -11,6 +11,7 @@ import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
 import { register as registerAccount } from '@/services/api/authApi';
 import { useAuthStore } from '@/state/authStore';
+import { useSettingsStore } from '@/state/settingsStore';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { AuthStackParamList } from '@/types/navigation';
 import { ApiError, getErrorMessage } from '@/utils/errors';
@@ -33,6 +34,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 export function RegisterScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const setSession = useAuthStore((state) => state.setSession);
+  const exitGuest = useSettingsStore((state) => state.exitGuest);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const {
@@ -55,6 +57,7 @@ export function RegisterScreen({ navigation }: Props) {
         password: values.password,
       });
       await setSession(session.user, session.token);
+      exitGuest();
     } catch (error) {
       if (error instanceof ApiError && error.fieldErrors) {
         const known = ['name', 'email', 'password'] as const;
