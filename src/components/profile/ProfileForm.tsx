@@ -1,13 +1,18 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { AppText } from '@/components/ui/AppText';
+import { Glass, glassSurface } from '@/components/ui/Glass';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 import { TextField } from '@/components/ui/TextField';
+import { useReduceMotion } from '@/hooks/useReduceMotion';
 import {
   ALLERGY_OPTIONS,
   EATING_OPTIONS,
@@ -15,16 +20,19 @@ import {
   LIMIT_OPTIONS,
   WHO_OPTIONS,
   allergyLabel,
+  lifeStageLabel,
   limitLabel,
 } from '@/constants/profileOptions';
+import { avatarForStage } from '@/constants/photos';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { LifeStage, Profile, ProfileInput, ProfileRole, ProfileSeed } from '@/types/models';
+import type { LifeStage, Profile, ProfileInput, ProfileRole, ProfileSeed, ProfileSex } from '@/types/models';
 import { ageFromDateOfBirth, ageGroupFromAge } from '@/utils/age';
 import { ApiError, getErrorMessage } from '@/utils/errors';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Enter a name').max(60, 'Use 60 characters or fewer'),
   lifeStage: z.enum(['me', 'adult', 'child', 'teen', 'baby', 'pregnancy', 'breastfeeding', 'senior', 'other']),
+  sex: z.enum(['female', 'male']).nullable(),
   ageMode: z.enum(['dob', 'age']),
   dateOfBirth: z.string(),
   age: z.string(),
@@ -38,6 +46,13 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const STEPS = ['Who', 'Eating', 'Allergies', 'Watch', 'Goals', 'Health'] as const;
+
+const FEMALE_ONLY: LifeStage[] = ['pregnancy', 'breastfeeding'];
+
+const SEX_OPTIONS: { id: ProfileSex; label: string }[] = [
+  { id: 'female', label: 'Female' },
+  { id: 'male', label: 'Male' },
+];
 
 function inferStage(profile?: Profile | null): LifeStage {
   if (profile?.lifeStage) return profile.lifeStage;
@@ -75,6 +90,7 @@ function toValues(profile?: Profile | null, seed?: ProfileSeed | null): FormValu
     return {
       name: '',
       lifeStage: seed.lifeStage ?? 'me',
+      sex: null,
       ageMode: seed.dateOfBirth ? 'dob' : seed.age !== null ? 'age' : 'dob',
       dateOfBirth: seed.dateOfBirth ?? '',
       age: seed.age === null ? '' : String(seed.age),
@@ -88,6 +104,7 @@ function toValues(profile?: Profile | null, seed?: ProfileSeed | null): FormValu
   return {
     name: profile?.name ?? '',
     lifeStage: inferStage(profile),
+    sex: profile?.sex ?? null,
     ageMode: inferAgeMode(profile),
     dateOfBirth: profile?.dateOfBirth ?? '',
     age: profile?.age === null || profile?.age === undefined ? '' : String(profile.age),
@@ -126,6 +143,7 @@ export function ProfileForm({
   report,
 }: Props) {
   const { colors } = useTheme();
+  const reduceMotion = useReduceMotion();
   const [step, setStep] = useState(0);
   const [formError, setFormError] = useState<string | null>(null);
   const {
@@ -133,6 +151,7 @@ export function ProfileForm({
     handleSubmit,
     setError,
     reset,
+    setValue,
     trigger,
     formState: { errors },
     watch,
@@ -145,10 +164,21 @@ export function ProfileForm({
     reset(toValues(initial, seed));
   }, [initial, reset, seed]);
 
-  const who = WHO_OPTIONS.filter((option) => option.id !== 'me' || allowedRoles.includes('self'));
   const ageMode = watch('ageMode');
   const dateOfBirth = watch('dateOfBirth');
+  const sex = watch('sex');
+  const lifeStage = watch('lifeStage');
+  const nameValue = watch('name');
+  const ageText = watch('age');
   const calculatedAge = ageMode === 'dob' ? ageFromDateOfBirth(dateOfBirth) : null;
+  const typedAge = ageMode === 'age' && /^\d{1,3}$/.test(ageText.trim()) ? Number(ageText.trim()) : null;
+  const who = WHO_OPTIONS.filter(
+    (option) =>
+      (option.id !== 'me' || allowedRoles.includes('self')) &&
+      (sex !== 'male' || !FEMALE_ONLY.includes(option.id)),
+  );
+  const preview = { name: nameValue, lifeStage, sex, age: calculatedAge ?? typedAge };
+  const previewKey = `${lifeStage}-${sex ?? 'any'}-${calculatedAge ?? typedAge ?? ''}`;
 
   const buildInput = (values: FormValues): ProfileInput | null => {
     let age: number | null = null;
@@ -192,6 +222,7 @@ export function ProfileForm({
       ageGroup: age === null ? stage.ageGroup : ageGroupFromAge(age),
       age,
       dateOfBirth,
+      sex: values.sex,
       diet,
       dietaryPreferences,
       allergies: values.allergies,
@@ -251,6 +282,24 @@ export function ProfileForm({
       {step === 0 ? (
         <View style={styles.block}>
           <AppText variant="display">Who is this for?</AppText>
+          <Glass style={styles.preview}>
+            <Animated.View key={previewKey} entering={reduceMotion ? undefined : ZoomIn.springify().damping(14)}>
+              <ProfileAvatar person={preview} size={96} selected />
+            </Animated.View>
+            <View style={styles.previewCopy}>
+              <AppText variant="title" numberOfLines={1}>
+                {nameValue.trim() || 'New member'}
+              </AppText>
+              <AppText variant="caption" color={colors.textSecondary}>
+                {[lifeStageLabel(lifeStage), sex ? SEX_OPTIONS.find((option) => option.id === sex)?.label : null, preview.age !== null ? `${preview.age} yrs` : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </AppText>
+              <AppText variant="caption" color={colors.textTertiary}>
+                Avatar is suggested from age and sex.
+              </AppText>
+            </View>
+          </Glass>
           <Controller
             control={control}
             name="name"
@@ -258,17 +307,72 @@ export function ProfileForm({
               <TextField label="Name" value={value} onBlur={onBlur} onChangeText={onChange} autoComplete="name" error={errors.name?.message} />
             )}
           />
+          <AppText variant="label" color={colors.textTertiary}>
+            Sex
+          </AppText>
+          <Controller
+            control={control}
+            name="sex"
+            render={({ field: { value, onChange } }) => (
+              <View style={styles.sexRow} accessibilityRole="radiogroup">
+                {SEX_OPTIONS.map((option) => {
+                  const selected = value === option.id;
+                  return (
+                    <Pressable
+                      key={option.id}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={option.label}
+                      onPress={() => {
+                        const next = selected ? null : option.id;
+                        onChange(next);
+                        if (next === 'male' && FEMALE_ONLY.includes(lifeStage)) setValue('lifeStage', 'adult');
+                      }}
+                      style={({ pressed }) => [
+                        styles.sexCard,
+                        glassSurface(colors),
+                        selected && { backgroundColor: colors.glassStrong, borderColor: colors.accent, borderWidth: 1.5 },
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <ProfileAvatar person={{ ...preview, sex: option.id, lifeStage: FEMALE_ONLY.includes(lifeStage) ? 'adult' : lifeStage }} size={48} selected={selected} />
+                      <AppText variant="headline" style={styles.sexLabel}>
+                        {option.label}
+                      </AppText>
+                      {selected ? <Ionicons name="checkmark-circle" size={22} color={colors.accent} /> : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          />
+          <AppText variant="label" color={colors.textTertiary}>
+            Life stage
+          </AppText>
           <Controller
             control={control}
             name="lifeStage"
             render={({ field: { value, onChange } }) => (
               <View style={styles.wrap}>
                 {who.map((option) => (
-                  <Chip key={option.id} label={option.label} selected={value === option.id} selection="single" onPress={() => onChange(option.id)} />
+                  <Chip
+                    key={option.id}
+                    label={option.label}
+                    avatar={avatarForStage(option.id, sex)}
+                    selected={value === option.id}
+                    selection="single"
+                    onPress={() => {
+                      onChange(option.id);
+                      if (FEMALE_ONLY.includes(option.id) && sex !== 'female') setValue('sex', 'female');
+                    }}
+                  />
                 ))}
               </View>
             )}
           />
+          <AppText variant="label" color={colors.textTertiary}>
+            Age
+          </AppText>
           <Controller
             control={control}
             name="ageMode"
@@ -455,6 +559,20 @@ function ChoiceStep({
 const styles = StyleSheet.create({
   form: { gap: 18 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  preview: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 },
+  previewCopy: { flex: 1, gap: 3 },
+  sexRow: { flexDirection: 'row', gap: 10 },
+  sexCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 68,
+    paddingHorizontal: 12,
+    borderRadius: 22,
+  },
+  sexLabel: { flex: 1 },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   block: { gap: 12 },
   nav: { gap: 10 },
 });

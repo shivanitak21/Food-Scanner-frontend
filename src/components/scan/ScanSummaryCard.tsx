@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { productPhoto } from '@/constants/photos';
 import { Card } from '@/components/ui/Card';
 import { AppText } from '@/components/ui/AppText';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -23,15 +24,12 @@ export const ScanSummaryCard = memo(function ScanSummaryCard({
   return (
     <Card onPress={onPress}>
       <View style={styles.row}>
-        {image ? (
-          <Image source={{ uri: image }} style={[styles.image, { borderRadius: radius.md, backgroundColor: colors.surfaceMuted }]} contentFit="cover" accessibilityLabel={scan.productName} />
-        ) : (
-          <View style={[styles.image, styles.fallback, { borderRadius: radius.md, backgroundColor: colors.primarySoft }]}>
-            <AppText variant="headline" color={colors.primary}>
-              {scan.productName.slice(0, 1).toUpperCase()}
-            </AppText>
-          </View>
-        )}
+        <Image
+          source={productPhoto(scan.productName, image)}
+          style={[styles.image, { borderRadius: radius.md, backgroundColor: colors.surfaceMuted }]}
+          contentFit="cover"
+          accessibilityLabel={scan.productName}
+        />
         <View style={styles.copy}>
           <AppText variant="bodyMedium" numberOfLines={2}>
             {scan.productName}
@@ -54,6 +52,5 @@ export const ScanSummaryCard = memo(function ScanSummaryCard({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   image: { width: 84, height: 84 },
-  fallback: { alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, gap: 4 },
 });

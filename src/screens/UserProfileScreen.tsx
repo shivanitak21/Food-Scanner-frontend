@@ -3,6 +3,8 @@ import { Alert, StyleSheet, View } from 'react-native';
 
 import { ProfileForm } from '@/components/profile/ProfileForm';
 import { AppText } from '@/components/ui/AppText';
+import { Glass } from '@/components/ui/Glass';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 import { Screen } from '@/components/ui/Screen';
 import { ErrorState, LoadingState } from '@/components/ui/StateViews';
 import { useCurrentUser, useProfileMutations, useProfiles } from '@/hooks/useFoodData';
@@ -30,17 +32,22 @@ export function UserProfileScreen({ navigation }: Props) {
 
   return (
     <Screen edges={['left', 'right', 'bottom']} keyboardOffset={88}>
-      <View style={styles.account}>
-        <AppText variant="label" color={colors.textTertiary}>
-          Account
-        </AppText>
-        <AppText variant="display">{user.data?.name || 'Your account'}</AppText>
-        {user.data?.email ? (
-          <AppText variant="body" color={colors.textSecondary}>
-            {user.data.email}
+      <Glass style={styles.account}>
+        <ProfileAvatar person={self ?? { name: user.data?.name, role: 'self' }} size={72} />
+        <View style={styles.accountCopy}>
+          <AppText variant="label" color={colors.textTertiary}>
+            Account
           </AppText>
-        ) : null}
-      </View>
+          <AppText variant="title" numberOfLines={1}>
+            {user.data?.name || 'Your account'}
+          </AppText>
+          {user.data?.email ? (
+            <AppText variant="caption" color={colors.textSecondary} numberOfLines={1}>
+              {user.data.email}
+            </AppText>
+          ) : null}
+        </View>
+      </Glass>
       {profiles.isLoading ? <LoadingState message="Loading your profile" /> : null}
       {profiles.isError ? (
         <ErrorState message={getErrorMessage(profiles.error)} onRetry={() => void profiles.refetch()} />
@@ -80,6 +87,13 @@ export function UserProfileScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   account: {
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 16,
+  },
+  accountCopy: {
+    flex: 1,
+    gap: 2,
   },
 });

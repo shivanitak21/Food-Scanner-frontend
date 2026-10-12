@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
@@ -28,14 +29,24 @@ export function Button({
 }: Props) {
   const { colors, fonts } = useTheme();
   const inactive = disabled || loading;
+  const filled = variant === 'primary';
 
   const palette = {
-    primary: { background: colors.primary, text: colors.onPrimary, border: colors.primary },
+    primary: { background: 'transparent', text: colors.onPrimary, border: 'transparent' },
     secondary: { background: colors.cream, text: colors.text, border: 'transparent' },
     ghost: { background: 'transparent', text: colors.primary, border: 'transparent' },
     danger: { background: colors.avoidSoft, text: colors.avoid, border: 'transparent' },
     inverse: { background: colors.surface, text: colors.text, border: colors.border },
   }[variant];
+
+  const content = loading ? (
+    <ActivityIndicator color={palette.text} />
+  ) : (
+    <View style={styles.content}>
+      {icon ? <Ionicons name={icon} size={18} color={palette.text} /> : null}
+      <AppText style={{ color: palette.text, ...fonts.bodySemibold, fontSize: 16, letterSpacing: -0.2 }}>{label}</AppText>
+    </View>
+  );
 
   return (
     <Pressable
@@ -52,19 +63,25 @@ export function Button({
         {
           backgroundColor: palette.background,
           borderColor: palette.border,
-          borderRadius: 16,
-          opacity: inactive ? 0.55 : pressed ? 0.88 : 1,
+          borderRadius: 999,
+          opacity: inactive ? 0.55 : pressed ? 0.9 : 1,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
+          overflow: 'hidden',
+          paddingHorizontal: filled ? 0 : 20,
         },
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={palette.text} />
+      {filled ? (
+        <LinearGradient
+          colors={[colors.primaryStart, colors.primaryEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fill}
+        >
+          {content}
+        </LinearGradient>
       ) : (
-        <View style={styles.content}>
-          {icon ? <Ionicons name={icon} size={18} color={palette.text} /> : null}
-          <AppText style={{ color: palette.text, ...fonts.bodyMedium, fontSize: 17, letterSpacing: -0.2 }}>{label}</AppText>
-        </View>
+        content
       )}
     </Pressable>
   );
@@ -82,5 +99,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  fill: {
+    minHeight: 54,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
   },
 });

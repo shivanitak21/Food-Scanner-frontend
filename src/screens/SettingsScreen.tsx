@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { DetailSheet } from '@/components/design/DetailSheet';
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
 import { Screen } from '@/components/ui/Screen';
 import { APP_VERSION } from '@/constants/config';
 import { DISCLAIMER } from '@/constants/copy';
@@ -44,7 +45,7 @@ export function SettingsScreen({ navigation }: Props) {
   return (
     <Screen>
       <AppText variant="display">Settings</AppText>
-      <View>
+      <View style={[styles.panel, { ...glassSurface(colors), borderRadius: 28, boxShadow: `0 10px 24px ${colors.shadow}` }]}>
         <Row
           title="Account"
           detail={signedIn ? user.data?.email || user.data?.name || 'Signed in' : 'Optional'}
@@ -142,6 +143,7 @@ function Row({ title, detail, onPress }: { title: string; detail?: string; onPre
 }
 
 const styles = StyleSheet.create({
+  panel: { paddingHorizontal: 16 },
   row: { minHeight: 64, justifyContent: 'center', gap: 2, borderBottomWidth: StyleSheet.hairlineWidth },
   block: { paddingVertical: 16, gap: 12 },
   themes: { flexDirection: 'row', gap: 18 },

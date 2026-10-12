@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
 import { useTheme } from '@/theme/ThemeProvider';
 
 type Point = {
@@ -25,7 +26,7 @@ export function WhyThisMatters({ name, points, onExplain }: Props) {
   const shown = open ? points : points.slice(0, 1);
 
   return (
-    <View style={[styles.wrap, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
+    <View style={[styles.wrap, { ...glassSurface(colors), borderRadius: radius.lg, boxShadow: `0 10px 24px ${colors.shadow}` }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
@@ -65,7 +66,7 @@ export function WhyThisMatters({ name, points, onExplain }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 10, padding: 16, borderWidth: StyleSheet.hairlineWidth },
+  wrap: { gap: 10, padding: 16 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   copy: { flex: 1, gap: 2 },
   point: { gap: 2 },

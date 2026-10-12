@@ -8,6 +8,8 @@ export type LifeStage = 'me' | 'adult' | 'child' | 'teen' | 'baby' | 'pregnancy'
 
 export type AgeGroup = 'baby' | 'child' | 'teen' | 'adult' | 'older_adult';
 
+export type ProfileSex = 'female' | 'male';
+
 export type DietPreference = 'none' | 'vegetarian' | 'vegan';
 
 export type FindingCategory = 'allergen' | 'nutrition' | 'ingredient' | 'preference' | 'other';
@@ -52,6 +54,7 @@ export interface Profile {
   ageGroup: AgeGroup | null;
   age: number | null;
   dateOfBirth: string | null;
+  sex: ProfileSex | null;
   diet: DietPreference;
   dietaryPreferences: string[];
   allergies: string[];
@@ -69,6 +72,7 @@ export interface ProfileInput {
   ageGroup: AgeGroup | null;
   age: number | null;
   dateOfBirth: string | null;
+  sex: ProfileSex | null;
   diet: DietPreference;
   dietaryPreferences: string[];
   allergies: string[];

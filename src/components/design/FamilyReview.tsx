@@ -1,6 +1,9 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { useProfiles } from '@/hooks/useFoodData';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { FamilyMemberSummary, FitStatus } from '@/types/models';
 
@@ -12,6 +15,8 @@ type Props = {
 
 export function FamilyReview({ members, selectedId, onSelect }: Props) {
   const { colors, radius } = useTheme();
+  const profiles = useProfiles();
+  const profilesById = new Map((profiles.data ?? []).map((profile) => [profile.id, profile]));
   const counts = {
     fit: members.filter((member) => member.fit === 'GOOD_FIT').length,
     review: members.filter((member) => member.fit === 'REVIEW').length,
@@ -47,17 +52,18 @@ export function FamilyReview({ members, selectedId, onSelect }: Props) {
             style={[
               styles.row,
               {
-                backgroundColor: selected ? colors.surface : 'transparent',
-                borderColor: selected ? colors.border : 'transparent',
+                ...glassSurface(colors),
+                borderColor: selected ? colors.accent : colors.glassBorder,
                 borderRadius: radius.lg,
+                boxShadow: `0 8px 20px ${colors.shadow}`,
               },
             ]}
           >
-            <View style={[styles.avatar, { backgroundColor: colors.surfaceMuted }]}>
-              <AppText variant="bodyMedium" color={colors.primary}>
-                {member.profileName.slice(0, 1).toUpperCase()}
-              </AppText>
-            </View>
+            <ProfileAvatar
+              person={profilesById.get(member.profileId) ?? { name: member.profileName }}
+              size={44}
+              selected={selected}
+            />
             <View style={styles.copy}>
               <AppText variant="headline">{member.profileName}</AppText>
               <AppText variant="caption" color={colors.textSecondary} numberOfLines={1}>
@@ -85,7 +91,7 @@ function fitTone(fit: FitStatus): 'suitable' | 'review' | 'avoid' | 'info' {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
+  wrap: { gap: 10 },
   heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   meter: { height: 6, flexDirection: 'row', overflow: 'hidden', marginBottom: 4 },
   row: {
@@ -97,7 +103,6 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
   },
-  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, gap: 2 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '38%' },
   dot: { width: 8, height: 8, borderRadius: 4 },

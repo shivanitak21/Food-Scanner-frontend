@@ -12,6 +12,7 @@ import { ProductVisual } from '@/components/design/ProductVisual';
 import { WhyThisMatters } from '@/components/design/WhyThisMatters';
 import { Appear } from '@/components/motion/Appear';
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
 import { Screen } from '@/components/ui/Screen';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { EvidenceItem, FamilyMemberSummary, FamilyScan, Finding } from '@/types/models';
@@ -72,7 +73,12 @@ function FamilyAnalysis({ navigation, scan }: { navigation: Props['navigation'];
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => navigation.goBack()} style={styles.back}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Back"
+        onPress={() => navigation.goBack()}
+        style={[styles.back, { ...glassSurface(colors), boxShadow: `0 8px 18px ${colors.shadow}` }]}
+      >
         <Ionicons name="chevron-back" size={22} color={colors.text} />
       </Pressable>
       <Appear index={0}>
@@ -180,7 +186,14 @@ function Cautions({ findings, onPress }: { findings: Finding[]; onPress: (findin
               accessibilityRole="button"
               accessibilityLabel={copy.title}
               onPress={() => onPress(finding)}
-              style={[styles.caution, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}
+              style={[
+                styles.caution,
+                {
+                  ...glassSurface(colors),
+                  borderRadius: radius.lg,
+                  boxShadow: `0 10px 24px ${colors.shadow}`,
+                },
+              ]}
             >
               <View style={[styles.badge, { backgroundColor: severe ? colors.avoidSoft : colors.reviewSoft }]}>
                 <Ionicons name="warning-outline" size={16} color={severe ? colors.avoid : colors.review} />
@@ -318,12 +331,12 @@ function FindingDetail({
 }
 
 const styles = StyleSheet.create({
-  back: { width: 44, height: 44, justifyContent: 'center' },
+  back: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   stack: { gap: 12 },
   sources: { gap: 6 },
   sourceHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  caution: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderWidth: StyleSheet.hairlineWidth },
-  badge: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  caution: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  badge: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, gap: 2 },
   sheet: { gap: 12 },
   point: { gap: 2 },

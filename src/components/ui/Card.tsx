@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
 
+import { Glass } from '@/components/ui/Glass';
 import { useTheme } from '@/theme/ThemeProvider';
 import { tapHaptic } from '@/utils/haptics';
 
@@ -12,22 +13,14 @@ type Props = {
 };
 
 export function Card({ children, onPress, style, padded = true }: Props) {
-  const { colors, radius } = useTheme();
-  const cardStyle = [
-    styles.card,
-    {
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
-      borderRadius: radius.lg,
-      padding: padded ? 18 : 0,
-      boxShadow: `0 10px 28px ${colors.shadow}`,
-    },
-    style,
-  ];
+  const { radius } = useTheme();
+  const body = (
+    <Glass radius={radius.lg} style={[{ padding: padded ? 18 : 0 }, style]}>
+      {children}
+    </Glass>
+  );
 
-  if (!onPress) {
-    return <View style={cardStyle}>{children}</View>;
-  }
+  if (!onPress) return body;
 
   return (
     <Pressable
@@ -36,15 +29,9 @@ export function Card({ children, onPress, style, padded = true }: Props) {
         void tapHaptic();
         onPress();
       }}
-      style={({ pressed }) => [cardStyle, pressed && { opacity: 0.94, transform: [{ scale: 0.992 }] }]}
+      style={({ pressed }) => pressed && { opacity: 0.94, transform: [{ scale: 0.99 }] }}
     >
-      {children}
+      {body}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-  },
-});

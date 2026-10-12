@@ -4,6 +4,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/StateViews';
 import { ageGroupLabel, allergyLabel, dietLabel, lifeStageLabel, limitLabel, roleLabel } from '@/constants/profileOptions';
@@ -95,13 +97,16 @@ function ProfileRow({ profile, onPress }: { profile: Profile; onPress: () => voi
       accessibilityRole="button"
       accessibilityLabel={`${profile.name}, ${meta}`}
       onPress={onPress}
-      style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 20 }]}
+      style={[
+        styles.row,
+        {
+          ...glassSurface(colors),
+          borderRadius: 28,
+          boxShadow: `0 10px 24px ${colors.shadow}`,
+        },
+      ]}
     >
-      <View style={[styles.avatar, { backgroundColor: colors.cream }]}>
-        <AppText variant="headline" color={colors.primary}>
-          {profile.name.slice(0, 1).toUpperCase()}
-        </AppText>
-      </View>
+      <ProfileAvatar person={profile} size={56} />
       <View style={styles.copy}>
         <AppText variant="headline">{profile.name}</AppText>
         <AppText variant="caption" color={colors.textSecondary}>
@@ -117,8 +122,7 @@ function ProfileRow({ profile, onPress }: { profile: Profile; onPress: () => voi
 
 const styles = StyleSheet.create({
   header: { gap: 4, marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 84, paddingHorizontal: 16, borderWidth: 1 },
-  avatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 84, paddingHorizontal: 16 },
   copy: { flex: 1, gap: 2 },
   add: { minHeight: 56, justifyContent: 'center', marginTop: 8 },
 });
