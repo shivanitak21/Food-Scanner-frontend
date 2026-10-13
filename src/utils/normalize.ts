@@ -19,6 +19,7 @@ import type {
   Product,
   Profile,
   ProfileSeed,
+  ProfileSex,
   QuickCaution,
   QuickContext,
   QuickHighlight,
@@ -636,6 +637,11 @@ export function normalizeAuth(value: unknown): AuthSession {
   return { token, user: normalizeUser(record.user ?? record) };
 }
 
+function normalizeSex(value: string | undefined): ProfileSex | null {
+  const sex = value?.toLowerCase();
+  return sex === 'female' || sex === 'male' ? sex : null;
+}
+
 export function normalizeProfile(value: unknown, index = 0): Profile | null {
   const record = asRecord(unwrapData(value));
   if (!record) return null;
@@ -650,6 +656,7 @@ export function normalizeProfile(value: unknown, index = 0): Profile | null {
     ageGroup: normalizeAgeGroup(pickString(profile, ['ageGroup', 'age_group'])),
     age: pickNumber(profile, ['age']),
     dateOfBirth: pickString(profile, ['dateOfBirth', 'date_of_birth']) ?? null,
+    sex: normalizeSex(pickString(profile, ['sex', 'gender'])),
     diet: normalizeDiet(profile),
     dietaryPreferences: stringList(profile.dietaryPreferences ?? profile.dietary_preferences ?? profile.preferences),
     allergies: stringList(profile.allergies),

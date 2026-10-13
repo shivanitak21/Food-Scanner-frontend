@@ -1,14 +1,18 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { BlurView } from 'expo-blur';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult, type BarcodeType } from 'expo-camera';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AnalysisLoader } from '@/components/scan/AnalysisLoader';
+import { ScanAnalyzing } from '@/components/scan/AnalysisLoader';
 import { CameraPermission } from '@/components/scan/CameraPermission';
-import { CameraIconButton, ScanLine, ScanModes } from '@/components/scan/ScannerChrome';
+import { CameraIconButton, ScanLine, ScanModes, ScanningPill } from '@/components/scan/ScannerChrome';
 import { AppText } from '@/components/ui/AppText';
+import { Glass } from '@/components/ui/Glass';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/StateViews';
 import { useProfiles, useScanMutations } from '@/hooks/useFoodData';
@@ -158,7 +162,7 @@ export function BarcodeScannerScreen({ navigation }: Props) {
 
   return (
     <View style={styles.fill}>
-      <StatusBar style={analyzing ? 'dark' : 'light'} />
+      <StatusBar style="light" />
       <CameraView
         style={styles.fill}
         facing="back"
@@ -169,29 +173,45 @@ export function BarcodeScannerScreen({ navigation }: Props) {
         onBarcodeScanned={analyzing || failure ? undefined : onBarcodeScanned}
       />
       {analyzing ? (
-        <View style={[styles.processing, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-          <AnalysisLoader subtitle={foundCode ? 'Looking up product' : 'Checking this barcode'} />
-        </View>
+        <ScanAnalyzing subtitle={foundCode ? `Barcode ${foundCode}` : 'Checking this barcode'} />
       ) : (
-        <View style={[styles.chrome, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.chrome, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 18 }]}>
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(12,10,22,0.45)', 'rgba(12,10,22,0)', 'rgba(12,10,22,0.35)']}
+            locations={[0, 0.35, 1]}
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.toolbar}>
             <CameraIconButton label="Close scanner" icon="close" onPress={() => navigation.goBack()} />
+            <ScanningPill label={failure ? 'Not found yet' : 'Scanning barcode'} />
             <CameraIconButton
               label={torch ? 'Turn torch off' : 'Turn torch on'}
-              icon={torch ? 'flashlight' : 'flashlight-outline'}
+              icon={torch ? 'flash' : 'flash-outline'}
+              active={torch}
               onPress={() => setTorch((value) => !value)}
             />
           </View>
           <View style={styles.finderWrap}>
             <View style={styles.finder}>
-              <ScanLine height={FINDER_HEIGHT} />
+              <View style={[styles.corner, styles.topLeft]} />
+              <View style={[styles.corner, styles.topRight]} />
+              <View style={[styles.corner, styles.bottomLeft]} />
+              <View style={[styles.corner, styles.bottomRight]} />
+              <View style={styles.finderClip}>
+                <ScanLine height={FINDER_HEIGHT} />
+              </View>
             </View>
-            <AppText variant="bodyMedium" color="#F7F5F0" style={styles.caption}>
-              {failure ? statusLine : HINTS[hint]}
-            </AppText>
+            <View style={styles.hint}>
+              <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+              <Ionicons name={failure ? 'alert-circle-outline' : 'barcode-outline'} size={16} color="#FFFFFF" />
+              <AppText variant="bodyMedium" color="#FFFFFF" style={styles.caption}>
+                {failure ? statusLine : HINTS[hint]}
+              </AppText>
+            </View>
           </View>
           {failure ? (
-            <View style={[styles.failure, { backgroundColor: colors.background, borderRadius: radius.lg }]}>
+            <Glass blur intensity={55} radius={radius.lg} style={[styles.failure, { backgroundColor: colors.glassStrong }]}>
               <AppText variant="headline" style={styles.captionDark}>
                 {failure === 'product' ? 'We found the barcode, but not this product.' : failure === 'network' ? 'Barcode detected' : "Can't find the barcode yet"}
               </AppText>
@@ -228,7 +248,7 @@ export function BarcodeScannerScreen({ navigation }: Props) {
                   lookup(code);
                 }}
               />
-            </View>
+            </Glass>
           ) : (
             <ScanModes mode="barcode" onBarcode={() => undefined} onLabel={() => navigation.replace('LabelCamera')} />
           )}
@@ -241,20 +261,35 @@ export function BarcodeScannerScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: '#171713' },
   chrome: { ...StyleSheet.absoluteFill, justifyContent: 'space-between', paddingHorizontal: 20 },
-  toolbar: { flexDirection: 'row', justifyContent: 'space-between' },
+  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   finderWrap: { alignItems: 'center', gap: 18 },
   finder: {
     width: '100%',
-    maxWidth: 300,
+    maxWidth: 310,
     height: FINDER_HEIGHT,
     borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: 'rgba(247, 245, 240, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  finderClip: { ...StyleSheet.absoluteFill, borderRadius: 28, overflow: 'hidden' },
+  corner: { position: 'absolute', width: 40, height: 40, borderColor: '#FFFFFF' },
+  topLeft: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 28 },
+  topRight: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 28 },
+  bottomLeft: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 28 },
+  bottomRight: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 28 },
+  hint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    height: 40,
+    borderRadius: 20,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.45)',
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
   },
   caption: { textAlign: 'center' },
   captionDark: { textAlign: 'center' },
-  processing: { ...StyleSheet.absoluteFill },
   failure: { padding: 18, gap: 10 },
   input: { minHeight: 48, borderBottomWidth: StyleSheet.hairlineWidth, fontSize: 16, paddingHorizontal: 4 },
 });

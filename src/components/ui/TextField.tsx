@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'rea
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
 import { useTheme } from '@/theme/ThemeProvider';
 
 type Props = TextInputProps & {
@@ -23,9 +24,10 @@ export function TextField({ label, error, secureTextEntry, multiline, style, ...
         style={[
           styles.field,
           {
-            backgroundColor: colors.surface,
-            borderColor: error ? colors.avoid : colors.border,
-            borderRadius: radius.md,
+            ...glassSurface(colors),
+            borderColor: error ? colors.avoid : colors.glassBorder,
+            borderRadius: radius.lg,
+            boxShadow: `0 8px 20px ${colors.shadow}`,
             alignItems: multiline ? 'flex-start' : 'center',
             minHeight: multiline ? 120 : 54,
           },

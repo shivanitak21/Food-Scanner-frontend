@@ -1,4 +1,10 @@
 import { QueryClientProvider } from '@tanstack/react-query';
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as SplashScreenNative from 'expo-splash-screen';
@@ -17,6 +23,7 @@ import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 SplashScreenNative.preventAutoHideAsync().catch(() => {
   // The native splash can already be hidden during fast refresh.
 });
+SplashScreenNative.setOptions({ duration: 400, fade: true });
 
 function AppShell() {
   const { mode, colors } = useTheme();
@@ -26,6 +33,10 @@ function AppShell() {
   const [minTimeDone, setMinTimeDone] = useState(false);
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
   });
 
   useEffect(() => {

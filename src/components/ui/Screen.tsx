@@ -9,6 +9,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme/ThemeProvider';
@@ -34,7 +35,7 @@ export function Screen({
   contentContainerStyle,
   keyboardOffset = 0,
 }: Props) {
-  const { colors, spacing } = useTheme();
+  const { spacing } = useTheme();
   const padding = padded ? spacing.xl : 0;
 
   const body = scroll ? (
@@ -52,35 +53,60 @@ export function Screen({
   );
 
   return (
-    <SafeAreaView edges={edges} style={[styles.safe, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={keyboardOffset}
-        style={styles.flex}
-      >
-        {body}
-        {footer ? (
-          <View
-            style={[
-              styles.footer,
-              {
-                paddingHorizontal: spacing.xl,
-                paddingTop: spacing.md,
-                paddingBottom: spacing.lg,
-                backgroundColor: colors.background,
-              },
-            ]}
-          >
-            {footer}
-          </View>
-        ) : null}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    <AppWash>
+      <SafeAreaView edges={edges} style={styles.safe}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={keyboardOffset}
+          style={styles.flex}
+        >
+          {body}
+          {footer ? (
+            <View
+              style={[
+                styles.footer,
+                {
+                  paddingHorizontal: spacing.xl,
+                  paddingTop: spacing.md,
+                  paddingBottom: spacing.lg,
+                  backgroundColor: 'transparent',
+                },
+              ]}
+            >
+              {footer}
+            </View>
+          ) : null}
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </AppWash>
+  );
+}
+
+export function AppWash({ children }: { children: ReactNode }) {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.safe, { backgroundColor: colors.background }]}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={[colors.washStart, colors.washMid, colors.washWarm]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0.3 }}
+        style={styles.wash}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[`${colors.background}00`, `${colors.background}B3`, colors.background]}
+        locations={[0, 0.55, 1]}
+        style={styles.wash}
+      />
+      {children}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
+  wash: { position: 'absolute', top: 0, left: 0, right: 0, height: 460 },
   footer: {},
 });

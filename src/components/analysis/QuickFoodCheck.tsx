@@ -5,6 +5,7 @@ import { IngredientList } from '@/components/design/IngredientList';
 import { ProductVisual } from '@/components/design/ProductVisual';
 import { Appear } from '@/components/motion/Appear';
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { NutrientBar } from '@/components/ui/NutrientBar';
@@ -38,7 +39,12 @@ export function QuickFoodCheck({
 
   return (
     <>
-      <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={styles.back}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Back"
+        onPress={onBack}
+        style={[styles.back, { ...glassSurface(colors), boxShadow: `0 8px 18px ${colors.shadow}` }]}
+      >
         <Ionicons name="chevron-back" size={22} color={colors.text} />
       </Pressable>
       <Appear index={0}>
@@ -50,7 +56,7 @@ export function QuickFoodCheck({
         <ProductVisual name={scan.product.name} brand={scan.product.brand} imageUrl={scan.product.imageUrl} />
       </Appear>
       <Appear index={1}>
-        <View style={[styles.overall, { backgroundColor: overallSoft, borderRadius: radius.lg }]}>
+        <View style={[styles.overall, { backgroundColor: overallSoft, borderRadius: radius.xl }]}>
           <AppText variant="label" color={overallColor}>
             Overall
           </AppText>
@@ -106,7 +112,7 @@ export function QuickFoodCheck({
           <View style={styles.stack}>
             <AppText variant="title">Cautions</AppText>
             {scan.cautions.map((item) => (
-              <View key={item.id} style={[styles.caution, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
+              <View key={item.id} style={[styles.caution, { ...glassSurface(colors), borderRadius: radius.lg, boxShadow: `0 10px 24px ${colors.shadow}` }]}>
                 <AppText variant="headline">{item.title}</AppText>
                 <AppText variant="caption" color={colors.textSecondary}>
                   {item.detail}
@@ -136,7 +142,7 @@ export function QuickFoodCheck({
         </View>
       </Appear>
       <Appear index={8}>
-        <View style={[styles.prompt, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
+        <View style={[styles.prompt, { ...glassSurface(colors), borderRadius: radius.lg, boxShadow: `0 10px 24px ${colors.shadow}` }]}>
           <AppText variant="headline">Want a more relevant result?</AppText>
           <AppText variant="caption" color={colors.textSecondary}>
             Age, diet, health considerations, and goals are optional.
@@ -170,9 +176,10 @@ function HighlightCard({ item }: { item: QuickHighlight }) {
       style={[
         styles.card,
         {
-          backgroundColor: colors.surface,
-          borderColor: item.emphasized ? colors.primary : colors.border,
+          ...glassSurface(colors),
+          borderColor: item.emphasized ? colors.primary : colors.glassBorder,
           borderRadius: radius.lg,
+          boxShadow: `0 8px 20px ${colors.shadow}`,
         },
       ]}
     >
@@ -190,13 +197,13 @@ function HighlightCard({ item }: { item: QuickHighlight }) {
 }
 
 const styles = StyleSheet.create({
-  back: { width: 44, height: 44, justifyContent: 'center' },
+  back: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   kicker: { marginBottom: 4 },
   stack: { gap: 12 },
-  overall: { gap: 6, padding: 16 },
+  overall: { gap: 6, padding: 18 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  card: { width: '48%', flexGrow: 1, gap: 8, padding: 14, borderWidth: StyleSheet.hairlineWidth },
+  card: { width: '48%', flexGrow: 1, gap: 8, padding: 14, borderWidth: 1 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  caution: { gap: 4, padding: 14, borderWidth: StyleSheet.hairlineWidth },
-  prompt: { gap: 10, padding: 16, borderWidth: StyleSheet.hairlineWidth },
+  caution: { gap: 4, padding: 14 },
+  prompt: { gap: 10, padding: 16 },
 });

@@ -6,7 +6,10 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { productPhoto } from '@/constants/photos';
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
+import { AppWash } from '@/components/ui/Screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/StateViews';
 import { useScanHistory } from '@/hooks/useFoodData';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -27,22 +30,27 @@ export function ScanHistoryScreen({ navigation }: Props) {
 
   if (history.isLoading) {
     return (
-      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.fill, { backgroundColor: colors.background }]}>
+      <AppWash>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.fill}>
         <LoadingState message="Gathering your scans" />
       </SafeAreaView>
+      </AppWash>
     );
   }
 
   if (history.isError) {
     return (
-      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.fill, styles.padded, { backgroundColor: colors.background }]}>
+      <AppWash>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.fill, styles.padded]}>
         <ErrorState message={getErrorMessage(history.error)} onRetry={() => void history.refetch()} />
       </SafeAreaView>
+      </AppWash>
     );
   }
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.fill, { backgroundColor: colors.background }]}>
+    <AppWash>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.fill}>
       <FlashList
         data={entries}
         keyExtractor={(item) => item.id}
@@ -73,6 +81,7 @@ export function ScanHistoryScreen({ navigation }: Props) {
         }
       />
     </SafeAreaView>
+    </AppWash>
   );
 }
 
@@ -109,16 +118,26 @@ function HistoryRow({ item, onPress }: { item: ScanSummary; onPress: () => void 
           : 'Good fit for everyone';
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={item.productName} onPress={onPress} style={styles.row}>
-      {item.imageUrl ? (
-        <Image
-          source={{ uri: item.imageUrl }}
-          contentFit="cover"
-          style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]}
-        />
-      ) : (
-        <View style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]} />
-      )}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={item.productName}
+      onPress={onPress}
+      style={[
+        styles.row,
+        {
+          ...glassSurface(colors),
+          borderRadius: radius.lg,
+          paddingHorizontal: 12,
+          boxShadow: `0 10px 24px ${colors.shadow}`,
+        },
+      ]}
+    >
+      <Image
+        source={productPhoto(item.productName, item.imageUrl)}
+        contentFit="cover"
+        accessibilityLabel={item.productName}
+        style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]}
+      />
       <View style={styles.copy}>
         <AppText variant="headline" numberOfLines={2}>
           {item.productName}
@@ -136,7 +155,7 @@ const styles = StyleSheet.create({
   padded: { padding: 24, justifyContent: 'center' },
   header: { paddingTop: 12, paddingBottom: 8, gap: 6 },
   day: { marginTop: 18, marginBottom: 4 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 84 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 84, marginTop: 10 },
   thumb: { width: 64, height: 64 },
   copy: { flex: 1, gap: 2 },
 });

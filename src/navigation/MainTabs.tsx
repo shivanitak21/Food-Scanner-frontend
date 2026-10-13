@@ -28,14 +28,17 @@ export function MainTabs() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: colors.tabBar,
-          borderTopWidth: 0,
+          backgroundColor: colors.glassStrong,
+          borderTopWidth: 1,
+          borderTopColor: colors.glassBorder,
           elevation: 0,
-          paddingTop: 4,
+          paddingTop: 6,
+          boxShadow: `0 -10px 28px ${colors.shadow}`,
         },
         tabBarLabelStyle: {
-          ...fonts.bodyMedium,
+          ...fonts.bodySemibold,
           fontSize: 11,
+          letterSpacing: 0.1,
         },
         tabBarIconStyle: {
           width: 32,

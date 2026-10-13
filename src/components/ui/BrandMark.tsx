@@ -1,31 +1,31 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/theme/ThemeProvider';
 
+const MARK = require('../../../assets/images/brand-mark.png');
+
 export function BrandMark({ size = 72, showWordmark = false }: { size?: number; showWordmark?: boolean }) {
   const { colors } = useTheme();
+  const corner = size * 0.227;
   return (
     <View style={styles.wrap}>
       <View
-        style={[
-          styles.mark,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            backgroundColor: colors.primary,
-          },
-        ]}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: corner,
+          boxShadow: `0 ${size * 0.14}px ${size * 0.36}px rgba(255, 87, 34, 0.32)`,
+        }}
       >
-        <Ionicons name="scan-outline" size={size * 0.46} color={colors.onPrimary} />
+        <Image source={MARK} style={{ width: size, height: size, borderRadius: corner }} contentFit="cover" />
       </View>
       {showWordmark ? (
         <View style={styles.wordmark}>
           <AppText variant="title">FoodLens</AppText>
           <AppText variant="caption" color={colors.textSecondary}>
-            Know what's inside.
+            Know what’s inside.
           </AppText>
         </View>
       ) : null}
@@ -37,10 +37,6 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     gap: 16,
-  },
-  mark: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   wordmark: {
     alignItems: 'center',

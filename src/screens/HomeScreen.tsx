@@ -7,7 +7,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
 import { Alert, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { ScanReticle } from '@/components/scan/ScannerChrome';
+import { foodPhotos, productPhoto } from '@/constants/photos';
 import { AppText } from '@/components/ui/AppText';
+import { Glass, glassSurface } from '@/components/ui/Glass';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 import { Banner } from '@/components/ui/Banner';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState, ErrorState } from '@/components/ui/StateViews';
@@ -28,7 +32,7 @@ type Props = CompositeScreenProps<
 >;
 
 export function HomeScreen({ navigation }: Props) {
-  const { colors, radius } = useTheme();
+  const { colors } = useTheme();
   const status = useAuthStore((state) => state.status);
   const offline = useAuthStore((state) => state.offline);
   const pendingProfile = useQuickDraftStore((state) => state.pending);
@@ -74,12 +78,15 @@ export function HomeScreen({ navigation }: Props) {
       }
     >
       <View style={styles.greeting}>
-        <AppText variant="editorial">{`${greeting}, ${name}`}</AppText>
-        <AppText variant="title" style={styles.headline}>
-          Know what's inside.
-        </AppText>
+        <View style={styles.greetingRow}>
+          <View style={styles.greetingCopy}>
+            <AppText variant="bodyMedium" color={colors.textSecondary}>{`${greeting}, ${name}`}</AppText>
+            <AppText variant="editorial">Know what’s inside.</AppText>
+          </View>
+          <ProfileAvatar person={people.find((profile) => profile.role === 'self') ?? { name, role: 'self' }} size={52} />
+        </View>
         <AppText variant="body" color={colors.textSecondary}>
-          Understand any food. Know who it's right for.
+          Understand any food. Know who it’s right for.
         </AppText>
       </View>
 
@@ -152,101 +159,91 @@ function ScanProductCard({ onScan, onBarcode }: { onScan: () => void; onBarcode:
   const { colors, radius } = useTheme();
 
   return (
-    <View style={[styles.scanShadow, { borderRadius: radius.xl, boxShadow: `0 16px 32px ${colors.shadow}` }]}>
+    <View style={[styles.scan, { borderRadius: radius.xl, boxShadow: `0 18px 40px ${colors.shadow}` }]}>
+      <Image source={foodPhotos.hero} contentFit="cover" style={StyleSheet.absoluteFill} accessibilityLabel="Fresh groceries" />
       <LinearGradient
-        colors={[colors.heroStart, colors.heroEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.scan, { borderRadius: radius.xl }]}
+        pointerEvents="none"
+        colors={['rgba(124, 107, 242, 0.18)', 'rgba(255, 255, 255, 0)', 'rgba(36, 27, 56, 0.22)']}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Scan a product. Take a photo of the package."
+        onPress={onScan}
+        style={({ pressed }) => [styles.finder, pressed && styles.pressed]}
       >
+        <ScanReticle size={128} />
+      </Pressable>
+      <Glass blur intensity={60} radius={radius.lg} style={styles.scanPanel}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Scan a product. Take a photo of the package."
           onPress={onScan}
           style={({ pressed }) => [styles.scanMain, pressed && styles.pressed]}
         >
-          <View style={styles.finder}>
-            <FinderCorner edge="tl" />
-            <FinderCorner edge="tr" />
-            <FinderCorner edge="bl" />
-            <FinderCorner edge="br" />
-            <View style={styles.finderIcon}>
-              <Ionicons name="camera-outline" size={26} color="#F5F5F7" />
-            </View>
-          </View>
           <View style={styles.scanCopy}>
-            <AppText variant="title" color="#F5F5F7" style={styles.scanTitle}>
-              Scan a product
-            </AppText>
-            <AppText variant="body" color="rgba(245, 245, 247, 0.72)">
+            <AppText variant="title">Scan a product</AppText>
+            <AppText variant="caption" color={colors.textSecondary}>
               Take a photo of the package
             </AppText>
           </View>
+          <LinearGradient
+            colors={[colors.primaryStart, colors.primaryEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.scanGo}
+          >
+            <Ionicons name="camera" size={20} color={colors.onPrimary} />
+          </LinearGradient>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Scan barcode instead"
           onPress={onBarcode}
-          style={({ pressed }) => [styles.barcode, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.barcode, { borderTopColor: colors.glassBorder }, pressed && styles.pressed]}
         >
-          <Ionicons name="barcode-outline" size={18} color="rgba(245, 245, 247, 0.82)" />
-          <AppText variant="bodyMedium" color="rgba(245, 245, 247, 0.82)" style={styles.barcodeLabel}>
+          <Ionicons name="barcode-outline" size={18} color={colors.accent} />
+          <AppText variant="bodyMedium" color={colors.text} style={styles.barcodeLabel}>
             Scan barcode instead
           </AppText>
-          <Ionicons name="chevron-forward" size={16} color="rgba(245, 245, 247, 0.5)" />
+          <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
         </Pressable>
-      </LinearGradient>
+      </Glass>
     </View>
   );
 }
 
-function FinderCorner({ edge }: { edge: 'tl' | 'tr' | 'bl' | 'br' }) {
-  const top = edge[0] === 't';
-  const left = edge[1] === 'l';
-  return (
-    <View
-      style={[
-        styles.corner,
-        top ? styles.cornerTop : styles.cornerBottom,
-        left ? styles.cornerLeft : styles.cornerRight,
-        {
-          borderTopWidth: top ? 1.5 : 0,
-          borderBottomWidth: top ? 0 : 1.5,
-          borderLeftWidth: left ? 1.5 : 0,
-          borderRightWidth: left ? 0 : 1.5,
-        },
-      ]}
-    />
-  );
-}
-
 function FamilyStrip({ people, onPress }: { people: Profile[]; onPress: () => void }) {
-  const { colors } = useTheme();
+  const { colors, radius } = useTheme();
   const shown = people.slice(0, 5);
   const extra = people.length - shown.length;
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`Your family, ${people.length} people`} onPress={onPress} style={styles.strip}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Your family, ${people.length} people`}
+      onPress={onPress}
+      style={[
+        styles.strip,
+        {
+          ...glassSurface(colors),
+          borderRadius: radius.lg,
+          paddingHorizontal: 14,
+          boxShadow: `0 10px 24px ${colors.shadow}`,
+        },
+      ]}
+    >
       {shown.map((profile, index) => (
-        <View
+        <ProfileAvatar
           key={profile.id}
-          style={[
-            styles.avatar,
-            {
-              backgroundColor: colors.cream,
-              borderColor: colors.background,
-              marginLeft: index === 0 ? 0 : -12,
-              zIndex: shown.length - index,
-            },
-          ]}
-        >
-          <AppText variant="bodyMedium" color={colors.primary}>
-            {profile.name.slice(0, 1).toUpperCase()}
-          </AppText>
-        </View>
+          person={profile}
+          size={44}
+          style={{ marginLeft: index === 0 ? 0 : -12, zIndex: shown.length - index }}
+        />
       ))}
       {extra > 0 ? (
-        <View style={[styles.avatar, { backgroundColor: colors.primarySoft, borderColor: colors.background, marginLeft: -12 }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.primarySoft, borderColor: colors.glassBorder, marginLeft: -12 }]}>
           <AppText variant="caption" color={colors.primary}>
             +{extra}
           </AppText>
@@ -280,21 +277,22 @@ function RecentRow({ scan, onPress }: { scan: ScanSummary; onPress: () => void }
       accessibilityRole="button"
       accessibilityLabel={`${scan.productName}. ${summary}`}
       onPress={onPress}
-      style={styles.recent}
+      style={[
+        styles.recent,
+        {
+          ...glassSurface(colors),
+          borderRadius: radius.lg,
+          paddingHorizontal: 12,
+          boxShadow: `0 10px 24px ${colors.shadow}`,
+        },
+      ]}
     >
-      {scan.imageUrl ? (
-        <Image
-          source={{ uri: scan.imageUrl }}
-          contentFit="cover"
-          style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]}
-        />
-      ) : (
-        <View style={[styles.thumb, styles.thumbFallback, { borderRadius: radius.md, backgroundColor: colors.ink }]}>
-          <AppText variant="headline" color={colors.background}>
-            {scan.productName.slice(0, 1).toUpperCase()}
-          </AppText>
-        </View>
-      )}
+      <Image
+        source={productPhoto(scan.productName, scan.imageUrl)}
+        contentFit="cover"
+        accessibilityLabel={scan.productName}
+        style={[styles.thumb, { borderRadius: radius.md, backgroundColor: colors.cream }]}
+      />
       <View style={styles.recentCopy}>
         <AppText variant="headline" numberOfLines={2}>
           {scan.productName}
@@ -309,50 +307,28 @@ function RecentRow({ scan, onPress }: { scan: ScanSummary; onPress: () => void }
 }
 
 const styles = StyleSheet.create({
-  greeting: { gap: 8, marginBottom: 4 },
-  headline: { marginTop: 12 },
-  scanShadow: {},
-  scan: { overflow: 'hidden' },
-  scanMain: { paddingTop: 18, paddingHorizontal: 18, paddingBottom: 20 },
+  greeting: { gap: 10, marginBottom: 2 },
+  greetingRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  greetingCopy: { flex: 1, gap: 4 },
+  scan: { overflow: 'hidden', minHeight: 360, justifyContent: 'space-between' },
+  scanPanel: { margin: 12 },
+  scanMain: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 14 },
+  scanGo: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.9 },
   finder: {
-    height: 120,
-    borderRadius: 18,
-    marginBottom: 20,
+    flex: 1,
+    minHeight: 190,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(247, 245, 240, 0.06)',
   },
-  finderIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(247, 245, 240, 0.28)',
-    backgroundColor: 'rgba(247, 245, 240, 0.08)',
-  },
-  corner: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderColor: 'rgba(247, 245, 240, 0.78)',
-  },
-  cornerTop: { top: 14 },
-  cornerBottom: { bottom: 14 },
-  cornerLeft: { left: 14 },
-  cornerRight: { right: 14 },
-  scanCopy: { gap: 6, paddingHorizontal: 4 },
-  scanTitle: { fontSize: 32, lineHeight: 38 },
+  scanCopy: { flex: 1, gap: 2 },
   barcode: {
-    minHeight: 56,
+    minHeight: 50,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 22,
+    paddingHorizontal: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(247, 245, 240, 0.18)',
   },
   barcodeLabel: { flex: 1 },
   section: { gap: 12 },
@@ -369,6 +345,5 @@ const styles = StyleSheet.create({
   names: { flex: 1, marginLeft: 12 },
   recent: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 84 },
   thumb: { width: 64, height: 64 },
-  thumbFallback: { alignItems: 'center', justifyContent: 'center' },
   recentCopy: { flex: 1, gap: 4 },
 });

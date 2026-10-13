@@ -68,7 +68,7 @@ export function LoginScreen({ navigation }: Props) {
         <BrandMark showWordmark />
         <AppText variant="title">Welcome back</AppText>
         <AppText variant="body" color={colors.textSecondary}>
-          Know what's inside.
+          Know what’s inside.
         </AppText>
       </View>
       {formError ? (

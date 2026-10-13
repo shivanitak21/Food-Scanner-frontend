@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { IngredientItem } from '@/types/models';
 import { ingredientCategory } from '@/utils/presentation';
@@ -22,6 +23,7 @@ export function IngredientList({
   return (
     <View style={styles.wrap}>
       <AppText variant="title">Ingredients</AppText>
+      <View style={[styles.list, { ...glassSurface(colors), borderRadius: 28, boxShadow: `0 10px 24px ${colors.shadow}` }]}>
       {visible.map((item, index) => (
         <View key={item.id}>
           {index > 0 ? <View style={[styles.rule, { backgroundColor: colors.border }]} /> : null}
@@ -31,7 +33,9 @@ export function IngredientList({
             onPress={() => onPress(item)}
             style={styles.row}
           >
-            <View style={[styles.dot, { backgroundColor: item.flagged ? colors.review : colors.sage }]} />
+            <View style={[styles.dot, { backgroundColor: item.flagged ? colors.reviewSoft : colors.accentSoft }]}>
+              <View style={[styles.dotCore, { backgroundColor: item.flagged ? colors.review : colors.accent }]} />
+            </View>
             <View style={styles.copy}>
               <AppText variant="bodyMedium">{item.name}</AppText>
               <AppText variant="caption" color={colors.textTertiary}>
@@ -49,6 +53,7 @@ export function IngredientList({
           </Pressable>
         </View>
       ))}
+      </View>
       {items.length > 5 ? (
         <Pressable
           accessibilityRole="button"
@@ -66,10 +71,12 @@ export function IngredientList({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 2 },
+  wrap: { gap: 12 },
+  list: { paddingHorizontal: 14, paddingVertical: 4 },
   row: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 12 },
   copy: { flex: 1, gap: 2 },
-  dot: { width: 7, height: 7, borderRadius: 4 },
+  dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  dotCore: { width: 8, height: 8, borderRadius: 4 },
   tag: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
   rule: { height: StyleSheet.hairlineWidth },
   more: { minHeight: 44, justifyContent: 'center' },

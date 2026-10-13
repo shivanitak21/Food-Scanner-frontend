@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { AppText } from '@/components/ui/AppText';
+import { glassSurface } from '@/components/ui/Glass';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
 import { useTheme, type Theme } from '@/theme/ThemeProvider';
 import type { NutritionItem } from '@/types/models';
@@ -18,7 +19,9 @@ export function NutritionBlock({ items, focus = [] }: { items: NutritionItem[]; 
 
   return (
     <View style={styles.wrap}>
-      <AppText variant="title">Nutritional overview</AppText>
+      <View style={styles.heading}>
+        <AppText variant="title">Nutrition breakdown</AppText>
+      </View>
       <View style={styles.grid}>
         {visible.map((item) => (
           <Metric key={item.id} item={item} relevant={isRelevant(item, focus)} />
@@ -81,15 +84,15 @@ function Metric({ item, relevant }: { item: NutritionItem; relevant: boolean }) 
         styles.card,
         compact && styles.cardFull,
         {
-          backgroundColor: colors.surface,
-          borderColor: relevant ? tone.fg : colors.border,
+          ...glassSurface(colors),
+          borderColor: relevant ? tone.fg : colors.glassBorder,
           borderRadius: radius.lg,
-          boxShadow: `0 8px 24px ${colors.shadow}`,
+          boxShadow: `0 10px 24px ${colors.shadow}`,
         },
       ]}
     >
       <View style={styles.cardHead}>
-        <View style={[styles.icon, { backgroundColor: tone.bg }]}>
+        <View style={[styles.icon, { backgroundColor: tone.bg, borderRadius: radius.pill }]}>
           <Ionicons name={nutrientIcon(item.name)} size={16} color={tone.fg} />
         </View>
         <AppText variant="caption" color={colors.textSecondary} style={styles.name}>
@@ -111,11 +114,12 @@ function Metric({ item, relevant }: { item: NutritionItem; relevant: boolean }) 
 
 const styles = StyleSheet.create({
   wrap: { gap: 14 },
+  heading: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   card: { width: '47%', flexGrow: 1, minWidth: 148, gap: 8, padding: 16, borderWidth: 1 },
   cardFull: { width: '100%' },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  icon: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   name: { flex: 1 },
   track: { height: 4, borderRadius: 2, overflow: 'hidden' },
   fill: { height: 4, borderRadius: 2 },

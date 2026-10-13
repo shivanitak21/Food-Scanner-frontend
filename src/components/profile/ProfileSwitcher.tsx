@@ -5,6 +5,7 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 import { useSelectedProfile } from '@/hooks/useSelectedProfile';
 import { roleLabel } from '@/constants/profileOptions';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -48,6 +49,7 @@ export function ProfileSwitcher({ visible, onClose }: { visible: boolean; onClos
                     },
                   ]}
                 >
+                  <ProfileAvatar person={profile} size={42} selected={active} />
                   <View style={styles.copy}>
                     <AppText variant="bodyMedium">{profile.name}</AppText>
                     <AppText variant="caption" color={colors.textSecondary}>

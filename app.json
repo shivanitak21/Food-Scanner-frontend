@@ -21,10 +21,8 @@
       "package": "com.foodlens.app",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "backgroundColor": "#1B5E45",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#FF5722",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -54,12 +52,13 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F3F0E8",
+          "backgroundColor": "#F9F6FD",
           "image": "./assets/splash-icon.png",
-          "imageWidth": 180,
+          "imageWidth": 240,
+          "resizeMode": "contain",
           "dark": {
-            "backgroundColor": "#101513",
-            "image": "./assets/splash-icon.png"
+            "backgroundColor": "#14111C",
+            "image": "./assets/splash-icon-dark.png"
           }
         }
       ],

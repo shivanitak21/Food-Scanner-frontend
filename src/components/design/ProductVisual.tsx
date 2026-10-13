@@ -1,43 +1,41 @@
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { productPhoto } from '@/constants/photos';
 import { AppText } from '@/components/ui/AppText';
+import { Glass } from '@/components/ui/Glass';
 import { useTheme } from '@/theme/ThemeProvider';
 
 export function ProductVisual({ name, brand, imageUrl }: { name: string; brand?: string; imageUrl?: string }) {
   const { colors, radius } = useTheme();
   const { width } = useWindowDimensions();
-  const height = Math.min(200, Math.max(148, width * 0.46));
+  const height = Math.min(320, Math.max(240, width * 0.72));
 
   return (
-    <View style={styles.wrap}>
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          accessibilityLabel={name}
-          contentFit="cover"
-          style={[styles.image, { height, borderRadius: radius.lg, backgroundColor: colors.cream }]}
-        />
-      ) : (
-        <View style={[styles.fallback, { height, borderRadius: radius.lg, backgroundColor: colors.ink }]}>
-          <AppText variant="editorial" color={colors.background} style={styles.initial}>
-            {name.slice(0, 1).toUpperCase()}
+    <View style={[styles.wrap, { height, borderRadius: radius.xl, backgroundColor: colors.cream }]}>
+      <Image source={productPhoto(name, imageUrl)} accessibilityLabel={name} contentFit="cover" style={StyleSheet.absoluteFill} transition={200} />
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(20, 14, 34, 0)', 'rgba(20, 14, 34, 0.28)']}
+        locations={[0.45, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <Glass blur intensity={50} radius={radius.lg} style={styles.caption}>
+        {brand ? (
+          <AppText variant="label" color={colors.textSecondary}>
+            {brand}
           </AppText>
-        </View>
-      )}
-      {brand ? (
-        <AppText variant="label" color={colors.textTertiary}>
-          {brand}
+        ) : null}
+        <AppText variant="title" numberOfLines={2}>
+          {name}
         </AppText>
-      ) : null}
-      <AppText variant="editorial">{name}</AppText>
+      </Glass>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  image: { width: '100%' },
-  fallback: { width: '100%', alignItems: 'center', justifyContent: 'center' },
-  initial: { fontSize: 64, lineHeight: 72 },
+  wrap: { width: '100%', overflow: 'hidden', justifyContent: 'flex-end' },
+  caption: { margin: 12, paddingHorizontal: 16, paddingVertical: 14, gap: 2 },
 });
